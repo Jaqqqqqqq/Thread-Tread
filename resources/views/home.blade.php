@@ -53,8 +53,8 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px; margin-top: 24px;">
         @foreach($products ?? [] as $product)
         <div style="background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding: 18px; text-align: center;">
-            <img src="{{ $product->image_url ?? 'https://via.placeholder.com/180x180?text=No+Image' }}" alt="{{ $product->name }}" style="width: 180px; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 12px;">
-            <div style="font-size: 1.1rem; font-weight: 500; margin-bottom: 6px;">{{ $product->name }}</div>
+            <img src="{{ $product->prod_image ? asset($product->prod_image) : 'https://via.placeholder.com/180x180?text=No+Image' }}" alt="{{ $product->product_name }}" style="width: 180px; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 12px;">
+            <div style="font-size: 1.1rem; font-weight: 500; margin-bottom: 6px;">{{ $product->product_name }}</div>
             <div style="color: #444; font-size: 1rem; margin-bottom: 10px;">₱{{ number_format($product->price, 2) }}</div>
             <button title="Add to Cart" style="background: #222; color: #fff; border: none; border-radius: 4px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h7.72a2 2 0 0 0 2-1.61l1.38-7.39H6"/></svg>

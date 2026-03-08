@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('remember_token', 100)->nullable();
             $table->enum('role', ['customer', 'admin'])->default('customer');
             $table->tinyInteger('is_active')->default(1);
-            $table->string('phone', 20);
+            $table->string('phone', 20)->nullable();
             $table->timestamps();
             $table->softDeletes();
 

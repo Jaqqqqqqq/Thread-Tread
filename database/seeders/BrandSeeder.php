@@ -13,31 +13,31 @@ class BrandSeeder extends Seeder
             [
                 'brand_name'  => 'Nike',
                 'description' => 'Just Do It — global sportswear brand.',
-                'brand_logo'  => null,
+                'brand_logo'  => 'nike.png',
                 'is_active'   => true,
             ],
             [
                 'brand_name'  => 'Adidas',
                 'description' => 'Impossible is Nothing — performance apparel.',
-                'brand_logo'  => null,
+                'brand_logo'  => 'adidas.png',
                 'is_active'   => true,
             ],
             [
                 'brand_name'  => 'Penshoppe',
                 'description' => 'Popular Filipino fashion brand.',
-                'brand_logo'  => null,
+                'brand_logo'  => 'penshoppe.png',
                 'is_active'   => true,
             ],
             [
                 'brand_name'  => 'Bench',
                 'description' => 'Proudly Filipino lifestyle brand.',
-                'brand_logo'  => null,
+                'brand_logo'  => 'bench.png',
                 'is_active'   => true,
             ],
             [
                 'brand_name'  => 'Uniqlo',
                 'description' => 'LifeWear — simple, high-quality everyday clothing.',
-                'brand_logo'  => null,
+                'brand_logo'  => 'uniqlo.png',
                 'is_active'   => false, // Inactive brand for admin toggle testing
             ],
         ];

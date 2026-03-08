@@ -21,8 +21,12 @@ class RegisterController extends Controller
             'lname' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'required|string|max:20',
         ]);
+
+        // Make the first user an admin
+        $userCount = User::count();
+        $role = $userCount === 0 ? 'admin' : 'customer';
 
         $user = User::create([
             'fname' => $request->fname,
@@ -30,10 +34,13 @@ class RegisterController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
-            'role' => 'customer',
+            'role' => $role,
         ]);
 
-        // Redirect to login page after registration
-        return redirect()->route('login')->with('success', 'Registration successful! Please log in.');
+        // Send email verification (to Mailtrap when MAIL_MAILER=smtp and Mailtrap credentials are in .env)
+        $user->sendEmailVerificationNotification();
+
+        // Redirect to login page – user must verify email before they can log in
+        return redirect()->route('login')->with('success', 'Registration successful! Please check your email (and Mailtrap inbox) to verify your account before logging in.');
     }
 }

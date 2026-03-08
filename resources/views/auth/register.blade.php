@@ -19,7 +19,7 @@
         </div>
         <div class="form-group">
             <label for="phone">Phone</label>
-            <input type="text" name="phone" id="phone">
+            <input type="text" name="phone" id="phone" required>
         </div>
         <div class="form-group">
             <label for="password">Password</label>
