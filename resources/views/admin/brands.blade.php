@@ -24,7 +24,6 @@
                                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;">Brand Name</th>
                                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;">Logo</th>
                                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;">Description</th>
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;">Created At</th>
                                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;">Actions</th>
                             </tr>
                         </thead>
@@ -41,7 +40,6 @@
                                         @endif
                                     </td>
                                     <td style="padding: 12px; color: #666; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $brand->description ?? 'N/A' }}</td>
-                                    <td style="padding: 12px; color: #666;">{{ $brand->created_at->format('M d, Y') }}</td>
                                     <td style="padding: 12px;">
                                         <div style="display: flex; gap: 10px;">
                                             <a href="{{ route('admin.brands.edit', $brand->brand_id) }}" style="background: #0052cc; color: #fff; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; border: none; cursor: pointer;">Edit</a>

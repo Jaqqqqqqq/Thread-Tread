@@ -33,7 +33,7 @@
                 <div style="margin-bottom: 20px;">
                     <label for="brand_logo" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Brand Logo</label>
                     <input type="file" id="brand_logo" name="brand_logo" accept="image/*" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
-                    <small style="color: #666; display: block; margin-top: 6px;">Accepted formats: JPG, PNG, GIF (Max 2MB)</small>
+                    <small style="color: #666; display: block; margin-top: 6px;">Accepted formats: JPG, PNG, GIF, WebP (Max 2MB)</small>
                 </div>
 
                 <div style="margin-bottom: 20px;">

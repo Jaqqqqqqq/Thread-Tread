@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class WishlistItem extends Model
 {
+    public $timestamps = false;
     
     
     

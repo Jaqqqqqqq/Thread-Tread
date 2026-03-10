@@ -22,25 +22,36 @@ class RegisterController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
             'phone' => 'required|string|max:20',
+            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         // Make the first user an admin
         $userCount = User::count();
         $role = $userCount === 0 ? 'admin' : 'customer';
 
-        $user = User::create([
+        // Prepare user data
+        $userData = [
             'fname' => $request->fname,
             'lname' => $request->lname,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
             'role' => $role,
-        ]);
+        ];
 
-        // Send email verification (to Mailtrap when MAIL_MAILER=smtp and Mailtrap credentials are in .env)
-        $user->sendEmailVerificationNotification();
+        // Handle profile photo upload
+        if ($request->hasFile('profile_photo')) {
+            $photo = $request->file('profile_photo');
+            $photoName = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+            $photo->move(public_path('images/users'), $photoName);
+            $userData['profile_photo'] = 'images/users/' . $photoName;
+        }
 
-        // Redirect to login page – user must verify email before they can log in
-        return redirect()->route('login')->with('success', 'Registration successful! Please check your email (and Mailtrap inbox) to verify your account before logging in.');
+        $user = User::create($userData);
+
+        // Auto-login the user after registration
+        Auth::login($user);
+
+        return redirect()->route('home')->with('success', 'Registration successful! Welcome to Thread-Tread.');
     }
 }

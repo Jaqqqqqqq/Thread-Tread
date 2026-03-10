@@ -61,9 +61,17 @@
 
             <!-- Product Images -->
             <div style="margin-bottom: 30px;">
-                <label for="prod_image" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Product Images</label>
+                <label for="product_images" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Product Images</label>
+                <input type="file" id="product_images" name="product_images[]" accept="image/*" multiple style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+                <small style="color: #666; display: block; margin-top: 6px;">Select one or more images. Accepted formats: JPG, PNG, GIF, WebP (Max 2MB each)</small>
+                <div id="imagePreview" style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;"></div>
+            </div>
+
+            <!-- Main Product Image (kept for backward compatibility) -->
+            <div style="margin-bottom: 30px;">
+                <label for="prod_image" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Primary Product Image (optional)</label>
                 <input type="file" id="prod_image" name="prod_image" accept="image/*" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
-                <small style="color: #666; display: block; margin-top: 6px;">You can select multiple images.</small>
+                <small style="color: #666; display: block; margin-top: 6px;">This is the main/thumbnail image. If not selected, the first image from above will be used. Accepted formats: JPG, PNG, GIF, WebP (Max 2MB)</small>
             </div>
 
             <!-- Variants Section -->
@@ -101,6 +109,23 @@
 
 <script>
     let variantCount = 1;
+    
+    // Image preview functionality
+    document.getElementById('product_images').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = '';
+        
+        Array.from(this.files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = document.createElement('img');
+                img.src = event.target.result;
+                img.style.cssText = 'height: 80px; width: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;';
+                preview.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        });
+    });
     
     document.getElementById('addVariantBtn').addEventListener('click', function(e) {
         e.preventDefault();

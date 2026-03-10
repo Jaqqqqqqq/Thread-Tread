@@ -18,15 +18,6 @@ class LoginController extends Controller
         $remember = $request->boolean('remember');
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
-            // Block login until email is verified
-            if (!$user->hasVerifiedEmail()) {
-                Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-                return back()->withErrors([
-                    'email' => 'You must verify your email address before you can log in. Please check your inbox (and Mailtrap) for the verification link.',
-                ]);
-            }
             $request->session()->regenerate();
             if ($user->role === 'admin') {
                 return redirect()->route('admin.products');
