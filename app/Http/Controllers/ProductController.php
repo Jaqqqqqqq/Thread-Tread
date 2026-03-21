@@ -25,6 +25,14 @@ class ProductController extends Controller
             $products->byBrand($request->brand);
         }
 
+        // Price range filter
+        if ($request->filled('min_price')) {
+            $products->where('price', '>=', (float)$request->min_price);
+        }
+        if ($request->filled('max_price')) {
+            $products->where('price', '<=', (float)$request->max_price);
+        }
+
         // Search (name)
         if ($request->filled('search')) {
             $search = $request->search;

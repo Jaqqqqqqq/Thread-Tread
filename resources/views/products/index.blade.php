@@ -2,7 +2,7 @@
 @section('content')
 <div class="container">
     <h2>Browse Products</h2>
-    <form class="row" method="GET">
+    <form class="row" method="GET" style="gap: 8px; align-items: end;">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search..." class="col">
         <select name="category" class="col">
             <option value="">All Categories</option>
@@ -16,6 +16,8 @@
                 <option value="{{ $b->brand_id }}"{{ request('brand')==$b->brand_id ? ' selected' : '' }}>{{ $b->brand_name }}</option>
             @endforeach
         </select>
+        <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="Min Price" class="col" min="0" step="0.01" style="max-width: 120px;">
+        <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="Max Price" class="col" min="0" step="0.01" style="max-width: 120px;">
         <select name="sort" class="col">
             <option value="">Sort</option>
             <option value="price_asc"{{ request('sort')=='price_asc'?' selected':'' }}>Price Low-High</option>
@@ -34,7 +36,7 @@
                     <p>{{ $product->category->category_name??'' }} | {{ $product->brand->brand_name??'' }}</p>
                     <p>Price: ₱{{ number_format($product->price,2) }}</p>
                     <p>Stock: {{ $product->totalStock() }}</p>
-                    <a href="{{ route('product.show', $product->product_id) }}" class="btn btn-outline-primary btn-sm">Details</a>
+                    <a href="{{ route('products.show', $product->product_id) }}" class="btn btn-outline-primary btn-sm">Details</a>
                 </div>
             </div>
         </div>
