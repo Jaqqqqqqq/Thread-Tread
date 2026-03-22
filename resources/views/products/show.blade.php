@@ -107,6 +107,7 @@
             @php
                 $userReview = $product->reviews->where('user_id', Auth::id())->first();
                 $hasPurchased = \App\Models\Order::where('user_id', Auth::id())
+                    ->where('order_status', 'completed')
                     ->whereHas('items', function($q) use ($product) {
                         $q->whereHas('variant', function($vq) use ($product) {
                             $vq->where('product_id', $product->product_id);

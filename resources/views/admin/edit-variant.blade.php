@@ -60,12 +60,6 @@
             </div>
         </form>
 
-        <!-- Delete Button -->
-        <form method="POST" action="{{ route('admin.variants.destroy', $variant->variant_id) }}" style="margin-top: 20px;">
-            @csrf
-            @method('DELETE')
-            <button type="submit" style="width: 100%; padding: 12px; background: #d32f2f; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 600;" onclick="return confirm('Are you sure you want to delete this variant? This action cannot be undone.');">Delete Variant</button>
-        </form>
     </div>
 </div>
 @endsection

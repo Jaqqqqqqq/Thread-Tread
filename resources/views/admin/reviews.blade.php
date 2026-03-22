@@ -62,7 +62,33 @@
                                         <form method="POST" action="{{ route('admin.reviews.destroy', $review->review_id) }}" style="display: inline;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" style="padding: 4px 10px; background: #d32f2f; color: #fff; border: none; border-radius: 3px; font-size: 12px; cursor: pointer; font-weight: 500;" onclick="return confirm('Are you sure you want to delete this review?');">Delete</button>
+                                            <button type="submit" style="padding: 4px 10px; background: #d32f2f; color: #fff; border: none; border-radius: 3px; font-size: 12px; cursor: pointer; font-weight: 500;" class="delete-review-btn">Delete</button>
+                                        @push('scripts')
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                document.querySelectorAll('.delete-review-btn').forEach(function(btn) {
+                                                    btn.addEventListener('click', function(e) {
+                                                        e.preventDefault();
+                                                        const form = btn.closest('form');
+                                                        Swal.fire({
+                                                            title: 'Delete Review',
+                                                            text: 'Are you sure you want to delete this review?',
+                                                            icon: 'warning',
+                                                            showCancelButton: true,
+                                                            confirmButtonColor: '#d32f2f',
+                                                            cancelButtonColor: '#aaa',
+                                                            confirmButtonText: 'Yes, delete',
+                                                            cancelButtonText: 'Cancel',
+                                                        }).then((result) => {
+                                                            if (result.isConfirmed) {
+                                                                form.submit();
+                                                            }
+                                                        });
+                                                    });
+                                                });
+                                            });
+                                        </script>
+                                        @endpush
                                         </form>
                                     </td>
                                 </tr>

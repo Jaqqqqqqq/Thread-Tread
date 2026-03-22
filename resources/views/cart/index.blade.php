@@ -68,7 +68,51 @@
                                 <form method="POST" action="{{ route('cart.remove', $item->cart_item_id) }}">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" style="padding: 6px 12px; background: #d32f2f; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;" onclick="return confirm('Remove this item?')">Remove</button>
+                                    <button type="button" class="removeBtn" style="padding: 6px 12px; background: #d32f2f; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">Remove</button>
+                                        <!-- Custom Remove Confirmation Modal -->
+                                        <div id="removeConfirmModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:1000; align-items:center; justify-content:center;">
+                                            <div style="background:#fff; border-radius:8px; max-width:350px; margin:auto; padding:32px 24px; box-shadow:0 4px 24px rgba(0,0,0,0.12); text-align:center;">
+                                                <h4 style="margin:0 0 16px 0; color:#d32f2f; font-size:1.1rem;">Remove Item</h4>
+                                                <p style="color:#333; font-size:15px; margin-bottom:24px;">Are you sure you want to remove this item from your cart?</p>
+                                                <div style="display:flex; gap:12px; justify-content:center;">
+                                                    <button id="confirmRemoveYes" style="padding:8px 20px; background:#d32f2f; color:#fff; border:none; border-radius:4px; font-weight:600; cursor:pointer;">Yes, Remove</button>
+                                                    <button id="confirmRemoveNo" style="padding:8px 20px; background:#eee; color:#333; border:none; border-radius:4px; font-weight:600; cursor:pointer;">Cancel</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                @push('scripts')
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        let formToSubmit = null;
+                                        const removeBtns = document.querySelectorAll('.removeBtn');
+                                        const modal = document.getElementById('removeConfirmModal');
+                                        const yesBtn = document.getElementById('confirmRemoveYes');
+                                        const noBtn = document.getElementById('confirmRemoveNo');
+
+                                        removeBtns.forEach(function(btn) {
+                                            btn.addEventListener('click', function(e) {
+                                                formToSubmit = btn.closest('form');
+                                                modal.style.display = 'flex';
+                                            });
+                                        });
+                                        yesBtn.addEventListener('click', function() {
+                                            modal.style.display = 'none';
+                                            if (formToSubmit) formToSubmit.submit();
+                                        });
+                                        noBtn.addEventListener('click', function() {
+                                            modal.style.display = 'none';
+                                            formToSubmit = null;
+                                        });
+                                        // Optional: close modal on outside click
+                                        modal.addEventListener('click', function(e) {
+                                            if (e.target === modal) {
+                                                modal.style.display = 'none';
+                                                formToSubmit = null;
+                                            }
+                                        });
+                                    });
+                                </script>
+                                @endpush
                                 </form>
                             </td>
                         </tr>

@@ -95,6 +95,7 @@ class ReviewController extends Controller
     private function hasPurchased($userId, $productId)
     {
         return Order::where('user_id', $userId)
+            ->where('order_status', 'completed')
             ->whereHas('items', function ($query) use ($productId) {
                 $query->whereHas('variant', function ($q) use ($productId) {
                     $q->where('product_id', $productId);

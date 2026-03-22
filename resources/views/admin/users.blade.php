@@ -89,7 +89,7 @@
         if (table && typeof jQuery !== 'undefined' && jQuery.fn.DataTable) {
             jQuery('#usersTable').DataTable({
                 pageLength: 10,
-                order: [[0, 'desc']],
+                order: [[0, 'asc']],
                 columnDefs: [
                     { orderable: false, targets: 8 }
                 ]

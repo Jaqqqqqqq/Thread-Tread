@@ -53,7 +53,32 @@
                             <td style="padding: 12px 16px; color: #999;">₱{{ number_format($product->price, 2) }}</td>
                             <td style="padding: 12px 16px; color: #999; font-size: 13px;">{{ $product->deleted_at->format('M d, Y H:i') }}</td>
                             <td style="padding: 12px 16px;">
-                                <form method="POST" action="{{ route('admin.products.restore', $product->product_id) }}" style="display: inline;" onsubmit="return confirm('Restore this product?');">
+                                <form method="POST" action="{{ route('admin.products.restore', $product->product_id) }}" style="display: inline;" class="restore-product-form">
+                                    @push('scripts')
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            document.querySelectorAll('.restore-product-form').forEach(function(form) {
+                                                form.addEventListener('submit', function(e) {
+                                                    e.preventDefault();
+                                                    Swal.fire({
+                                                        title: 'Restore Product',
+                                                        text: 'Restore this product?',
+                                                        icon: 'question',
+                                                        showCancelButton: true,
+                                                        confirmButtonColor: '#2e7d32',
+                                                        cancelButtonColor: '#aaa',
+                                                        confirmButtonText: 'Yes, restore',
+                                                        cancelButtonText: 'Cancel',
+                                                    }).then((result) => {
+                                                        if (result.isConfirmed) {
+                                                            form.submit();
+                                                        }
+                                                    });
+                                                });
+                                            });
+                                        });
+                                    </script>
+                                    @endpush
                                     @csrf
                                     @method('PUT')
                                     <button type="submit" style="background: #2e7d32; color: #fff; padding: 6px 14px; border-radius: 4px; border: none; font-size: 13px; font-weight: 500; cursor: pointer;">♻️ Restore</button>

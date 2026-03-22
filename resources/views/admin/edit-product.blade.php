@@ -155,7 +155,33 @@
                                                 <form method="POST" action="{{ route('admin.variants.destroy', $variant->variant_id) }}" style="display: inline;">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" style="padding: 4px 8px; background: #d32f2f; color: #fff; border: none; border-radius: 3px; text-decoration: none; font-size: 12px; cursor: pointer; font-weight: 500;" onclick="return confirm('Are you sure you want to delete this variant?');">Delete</button>
+                                                    <button type="submit" style="padding: 4px 8px; background: #d32f2f; color: #fff; border: none; border-radius: 3px; text-decoration: none; font-size: 12px; cursor: pointer; font-weight: 500;" class="delete-variant-btn">Delete</button>
+                                                @push('scripts')
+                                                <script>
+                                                    document.addEventListener('DOMContentLoaded', function() {
+                                                        document.querySelectorAll('.delete-variant-btn').forEach(function(btn) {
+                                                            btn.addEventListener('click', function(e) {
+                                                                e.preventDefault();
+                                                                const form = btn.closest('form');
+                                                                Swal.fire({
+                                                                    title: 'Delete Variant',
+                                                                    text: 'Are you sure you want to delete this variant?',
+                                                                    icon: 'warning',
+                                                                    showCancelButton: true,
+                                                                    confirmButtonColor: '#d32f2f',
+                                                                    cancelButtonColor: '#aaa',
+                                                                    confirmButtonText: 'Yes, delete',
+                                                                    cancelButtonText: 'Cancel',
+                                                                }).then((result) => {
+                                                                    if (result.isConfirmed) {
+                                                                        form.submit();
+                                                                    }
+                                                                });
+                                                            });
+                                                        });
+                                                    });
+                                                </script>
+                                                @endpush
                                                 </form>
                                             </div>
                                         </td>

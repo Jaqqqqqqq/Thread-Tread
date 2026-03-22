@@ -138,21 +138,21 @@
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="order_status" value="processing">
-                        <button type="submit" style="padding: 10px 24px; background: #1976d2; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 600;" onclick="return confirm('Confirm this order?')">✅ Confirm Order</button>
+                        <button type="submit" style="padding: 10px 24px; background: #1976d2; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 600;" class="order-action-btn" data-confirm="Confirm this order?">✅ Confirm Order</button>
                     </form>
                 @elseif($order->order_status === 'processing')
                     <form method="POST" action="{{ route('admin.orders.updateStatus', $order->order_id) }}" style="display: inline;">
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="order_status" value="shipped">
-                        <button type="submit" style="padding: 10px 24px; background: #283593; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 600;" onclick="return confirm('Mark as shipped?')">🚚 Mark as Shipped</button>
+                        <button type="submit" style="padding: 10px 24px; background: #283593; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 600;" class="order-action-btn" data-confirm="Mark as shipped?">🚚 Mark as Shipped</button>
                     </form>
                 @elseif($order->order_status === 'shipped')
                     <form method="POST" action="{{ route('admin.orders.updateStatus', $order->order_id) }}" style="display: inline;">
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="order_status" value="completed">
-                        <button type="submit" style="padding: 10px 24px; background: #2e7d32; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 600;" onclick="return confirm('Mark as completed?')">📦 Mark as Completed</button>
+                        <button type="submit" style="padding: 10px 24px; background: #2e7d32; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 600;" class="order-action-btn" data-confirm="Mark as completed?">📦 Mark as Completed</button>
                     </form>
                 @endif
 
@@ -161,7 +161,34 @@
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="order_status" value="cancelled">
-                        <button type="submit" style="padding: 10px 24px; background: #d32f2f; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 600;" onclick="return confirm('Cancel this order? Stock will be restored.')">❌ Cancel Order</button>
+                        <button type="submit" style="padding: 10px 24px; background: #d32f2f; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 600;" class="order-action-btn" data-confirm="Cancel this order? Stock will be restored.">❌ Cancel Order</button>
+                    @push('scripts')
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            document.querySelectorAll('.order-action-btn').forEach(function(btn) {
+                                btn.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    const form = btn.closest('form');
+                                    const msg = btn.getAttribute('data-confirm') || 'Are you sure?';
+                                    Swal.fire({
+                                        title: 'Confirm Action',
+                                        text: msg,
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonColor: '#1976d2',
+                                        cancelButtonColor: '#aaa',
+                                        confirmButtonText: 'Yes',
+                                        cancelButtonText: 'Cancel',
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            form.submit();
+                                        }
+                                    });
+                                });
+                            });
+                        });
+                    </script>
+                    @endpush
                     </form>
                 @endif
             </div>

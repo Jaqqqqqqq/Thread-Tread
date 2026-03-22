@@ -51,7 +51,32 @@
                             <td style="padding: 12px 16px;">
                                 <div style="display: flex; gap: 8px;">
                                     <a href="{{ route('admin.products.edit', $product->product_id) }}" style="background: #0052cc; color: #fff; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500;">Edit</a>
-                                    <form method="POST" action="{{ route('admin.products.destroy', $product->product_id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to move this product to trash?');">
+                                    <form method="POST" action="{{ route('admin.products.destroy', $product->product_id) }}" style="display: inline;" class="delete-product-form">
+                                        @push('scripts')
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                document.querySelectorAll('.delete-product-form').forEach(function(form) {
+                                                    form.addEventListener('submit', function(e) {
+                                                        e.preventDefault();
+                                                        Swal.fire({
+                                                            title: 'Move to Trash',
+                                                            text: 'Are you sure you want to move this product to trash?',
+                                                            icon: 'warning',
+                                                            showCancelButton: true,
+                                                            confirmButtonColor: '#d32f2f',
+                                                            cancelButtonColor: '#aaa',
+                                                            confirmButtonText: 'Yes, move',
+                                                            cancelButtonText: 'Cancel',
+                                                        }).then((result) => {
+                                                            if (result.isConfirmed) {
+                                                                form.submit();
+                                                            }
+                                                        });
+                                                    });
+                                                });
+                                            });
+                                        </script>
+                                        @endpush
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" style="background: #d32f2f; color: #fff; padding: 6px 14px; border-radius: 4px; border: none; font-size: 13px; font-weight: 500; cursor: pointer;">Delete</button>

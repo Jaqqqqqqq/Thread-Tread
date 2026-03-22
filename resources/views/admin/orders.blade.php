@@ -20,6 +20,7 @@
                     <table id="ordersTable" style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
+                                <th style="display:none;"></th>
                                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;">Order ID</th>
                                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;">Customer</th>
                                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;">Total</th>
@@ -41,6 +42,7 @@
                                     $sc = $statusColors[$order->order_status] ?? ['bg' => '#f5f5f5', 'text' => '#666'];
                                 @endphp
                                 <tr style="border-bottom: 1px solid #ddd;">
+                                    <td style="display:none;">{{ $order->order_id }}</td>
                                     <td style="padding: 12px; font-weight: 600; color: #333;">#{{ $order->order_id }}</td>
                                     <td style="padding: 12px; color: #333;">
                                         @if($order->user)
@@ -99,7 +101,11 @@
     $(document).ready(function() {
         $('#ordersTable').DataTable({
             pageLength: 15,
-            order: [[0, 'desc']],
+            order: [[0, 'asc']], // sort by hidden numeric column
+            columnDefs: [
+                { targets: 0, visible: false }, // hide the numeric column
+                { targets: 1, orderData: 0 } // sort Order ID display by hidden numeric column
+            ],
             language: {
                 search: "Search orders:"
             }

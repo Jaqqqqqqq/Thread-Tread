@@ -59,7 +59,44 @@
                     @enderror
                 </div>
 
-                <button type="submit" style="width: 100%; padding: 14px; background: #2e7d32; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: 600;" onclick="return confirm('Place this order?')">Place Order</button>
+                <button type="button" id="placeOrderBtn" style="width: 100%; padding: 14px; background: #2e7d32; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: 600;">Place Order</button>
+                <!-- Custom Confirmation Modal -->
+                <div id="orderConfirmModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:1000; align-items:center; justify-content:center;">
+                    <div style="background:#fff; border-radius:8px; max-width:350px; margin:auto; padding:32px 24px; box-shadow:0 4px 24px rgba(0,0,0,0.12); text-align:center;">
+                        <h4 style="margin:0 0 16px 0; color:#2e7d32; font-size:1.1rem;">Confirm Order</h4>
+                        <p style="color:#333; font-size:15px; margin-bottom:24px;">Are you sure you want to place this order?</p>
+                        <div style="display:flex; gap:12px; justify-content:center;">
+                            <button id="confirmOrderYes" style="padding:8px 20px; background:#2e7d32; color:#fff; border:none; border-radius:4px; font-weight:600; cursor:pointer;">Yes, Place Order</button>
+                            <button id="confirmOrderNo" style="padding:8px 20px; background:#eee; color:#333; border:none; border-radius:4px; font-weight:600; cursor:pointer;">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const placeOrderBtn = document.getElementById('placeOrderBtn');
+                    const modal = document.getElementById('orderConfirmModal');
+                    const yesBtn = document.getElementById('confirmOrderYes');
+                    const noBtn = document.getElementById('confirmOrderNo');
+                    const form = placeOrderBtn.closest('form');
+
+                    placeOrderBtn.addEventListener('click', function(e) {
+                        modal.style.display = 'flex';
+                    });
+                    yesBtn.addEventListener('click', function() {
+                        modal.style.display = 'none';
+                        form.submit();
+                    });
+                    noBtn.addEventListener('click', function() {
+                        modal.style.display = 'none';
+                    });
+                    // Optional: close modal on outside click
+                    modal.addEventListener('click', function(e) {
+                        if (e.target === modal) modal.style.display = 'none';
+                    });
+                });
+            </script>
+            @endpush
             </form>
         </div>
 

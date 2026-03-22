@@ -35,7 +35,32 @@
                                     <td style="padding: 12px;">
                                         <div style="display: flex; gap: 10px;">
                                             <a href="{{ route('admin.categories.edit', $category->category_id) }}" style="background: #0052cc; color: #fff; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; border: none; cursor: pointer;">Edit</a>
-                                            <form method="POST" action="{{ route('admin.categories.destroy', $category->category_id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this category?');">
+                                            <form method="POST" action="{{ route('admin.categories.destroy', $category->category_id) }}" style="display: inline;" class="delete-category-form">
+                                                @push('scripts')
+                                                <script>
+                                                    document.addEventListener('DOMContentLoaded', function() {
+                                                        document.querySelectorAll('.delete-category-form').forEach(function(form) {
+                                                            form.addEventListener('submit', function(e) {
+                                                                e.preventDefault();
+                                                                Swal.fire({
+                                                                    title: 'Delete Category',
+                                                                    text: 'Are you sure you want to delete this category?',
+                                                                    icon: 'warning',
+                                                                    showCancelButton: true,
+                                                                    confirmButtonColor: '#d32f2f',
+                                                                    cancelButtonColor: '#aaa',
+                                                                    confirmButtonText: 'Yes, delete',
+                                                                    cancelButtonText: 'Cancel',
+                                                                }).then((result) => {
+                                                                    if (result.isConfirmed) {
+                                                                        form.submit();
+                                                                    }
+                                                                });
+                                                            });
+                                                        });
+                                                    });
+                                                </script>
+                                                @endpush
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" style="background: #d32f2f; color: #fff; padding: 6px 14px; border-radius: 4px; border: none; font-size: 13px; font-weight: 500; cursor: pointer;">Delete</button>

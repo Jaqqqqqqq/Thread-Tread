@@ -39,18 +39,29 @@
                                             <span style="color: #999; font-size: 13px;">No logo</span>
                                         @endif
                                     </td>
-                                    <td style="padding: 12px; color: #666; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $brand->description ?? 'N/A' }}</td>
-                                    <td style="padding: 12px;">
-                                        <div style="display: flex; gap: 10px;">
-                                            <a href="{{ route('admin.brands.edit', $brand->brand_id) }}" style="background: #0052cc; color: #fff; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; border: none; cursor: pointer;">Edit</a>
-                                            <form method="POST" action="{{ route('admin.brands.destroy', $brand->brand_id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this brand?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" style="background: #d32f2f; color: #fff; padding: 6px 14px; border-radius: 4px; border: none; font-size: 13px; font-weight: 500; cursor: pointer;">Delete</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        <td style="padding: 12px; color: #666; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                            {{ $brand->description ?? 'N/A' }}
+                                        </td>
+                                            <td style="padding: 12px;">
+    <div style="display: flex; gap: 10px;">
+        <a href="{{ route('admin.brands.edit', $brand->brand_id) }}"
+           style="background: #0052cc; color: #fff; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; border: none; cursor: pointer;">
+            Edit
+        </a>
+        <form method="POST"
+              action="{{ route('admin.brands.destroy', $brand->brand_id) }}"
+              id="deleteBrandForm{{ $brand->brand_id }}"
+              style="display: inline;">
+            @csrf
+            @method('DELETE')
+            <button type="button" class="btn btn-danger btn-sm"
+                    onclick="confirmDeleteBrand({{ $brand->brand_id }})">
+                Delete
+            </button>
+        </form>
+    </div>
+</td>
+                                        </tr>
                             @endforeach
                         </tbody>
                     </table>
@@ -64,3 +75,23 @@
     </div>
 </div>
 @endsection
+
+
+<script>
+function confirmDeleteBrand(brandId) {
+    Swal.fire({
+        title: 'Delete this brand?',
+        text: "This action cannot be undone.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#1976d2',
+        cancelButtonColor: '#aaa',
+        confirmButtonText: 'Yes, delete it!',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('deleteBrandForm' + brandId).submit();
+        }
+    });
+}
+</script>
