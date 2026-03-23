@@ -46,9 +46,20 @@
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             @foreach($methods as $m)
                                 <label style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: border-color 0.2s;">
-                                    <input type="radio" name="method_id" value="{{ $m->method_id }}" {{ $loop->first ? 'checked' : '' }} style="margin: 0;">
+                                    <input type="radio" name="method_id" value="{{ $m->method_id }}" class="payment-method-radio" {{ $loop->first ? 'checked' : '' }} style="margin: 0;">
                                     <span style="font-size: 14px; color: #333;">{{ $m->method_name }}</span>
                                 </label>
+                                
+                                @if($m->method_name === 'Online Payment')
+                                    <div id="onlinePaymentInput" style="display: {{ $loop->first ? 'block' : 'none' }}; margin: -4px 0 12px 28px; background: #f9f9f9; padding: 12px; border-radius: 4px; border: 1px solid #e0e0e0;">
+                                        <label for="payment_ref" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #333;">Payment Reference/Transaction ID</label>
+                                        <input type="text" id="payment_ref" name="payment_ref" placeholder="Enter payment reference (e.g., GCash/Credit Card ref)" value="{{ old('payment_ref') }}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+                                        <small style="color: #888; display: block; margin-top: 6px;">Please provide your payment reference to confirm the transaction.</small>
+                                        @error('payment_ref')
+                                            <span style="color: #c62828; font-size: 12px; display: block; margin-top: 4px;">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                @endif
                             @endforeach
                         </div>
                     @else
@@ -79,10 +90,47 @@
                     const yesBtn = document.getElementById('confirmOrderYes');
                     const noBtn = document.getElementById('confirmOrderNo');
                     const form = placeOrderBtn.closest('form');
-
+                    
+                    // Payment method toggle functionality
+                    const paymentRadios = document.querySelectorAll('.payment-method-radio');
+                    const onlinePaymentInput = document.getElementById('onlinePaymentInput');
+                    const paymentRefInput = document.getElementById('payment_ref');
+                    
+                    // Function to toggle online payment input visibility
+                    function togglePaymentInput() {
+                        const selectedMethod = document.querySelector('.payment-method-radio:checked');
+                        const selectedLabel = selectedMethod.closest('label').textContent.trim();
+                        
+                        if (selectedLabel.includes('Online Payment')) {
+                            onlinePaymentInput.style.display = 'block';
+                            paymentRefInput.setAttribute('required', 'required');
+                        } else {
+                            onlinePaymentInput.style.display = 'none';
+                            paymentRefInput.removeAttribute('required');
+                            paymentRefInput.value = '';
+                        }
+                    }
+                    
+                    // Add event listeners to all payment method radios
+                    paymentRadios.forEach(radio => {
+                        radio.addEventListener('change', togglePaymentInput);
+                    });
+                    
+                    // Validate payment reference before order submission
                     placeOrderBtn.addEventListener('click', function(e) {
+                        const selectedMethod = document.querySelector('.payment-method-radio:checked');
+                        const selectedLabel = selectedMethod.closest('label').textContent.trim();
+                        
+                        if (selectedLabel.includes('Online Payment') && !paymentRefInput.value.trim()) {
+                            e.preventDefault();
+                            paymentRefInput.style.borderColor = '#d32f2f';
+                            alert('Please enter your payment reference for online payment.');
+                            return;
+                        }
+                        
                         modal.style.display = 'flex';
                     });
+                    
                     yesBtn.addEventListener('click', function() {
                         modal.style.display = 'none';
                         form.submit();

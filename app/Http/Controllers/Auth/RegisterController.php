@@ -2,10 +2,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\EmailVerification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class RegisterController extends Controller
 {
@@ -49,9 +51,10 @@ class RegisterController extends Controller
 
         $user = User::create($userData);
 
-        // Auto-login the user after registration
-        Auth::login($user);
+        // Send verification email
+        Mail::to($user->email)->send(new EmailVerification($user));
 
-        return redirect()->route('home')->with('success', 'Registration successful! Welcome to Thread-Tread.');
+        // Don't auto-login - user must verify email first
+        return redirect()->route('login')->with('success', 'Registration successful! Please check your email to verify your account before logging in.');
     }
 }

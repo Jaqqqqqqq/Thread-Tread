@@ -15,15 +15,15 @@ class PaymentSeeder extends Seeder
         $orders = Order::all();
 
         $paymentData = [
-            // Order 1 (completed) — paid
+            // Order 1 (completed, January) — paid
             [
                 'order_id'        => $orders->get(0)->order_id,
                 'payment_status'  => 'paid',
                 'transaction_ref' => 'GCASH-TXN-001',
                 'amount'          => 1798.00,
-                'paid_at'         => now()->subDays(5),
+                'paid_at'         => now()->setMonth(1)->setDay(10),
             ],
-            // Order 2 (pending COD) — pending
+            // Order 2 (pending COD, February) — pending
             [
                 'order_id'        => $orders->get(1)->order_id,
                 'payment_status'  => 'pending',
@@ -31,23 +31,23 @@ class PaymentSeeder extends Seeder
                 'amount'          => 899.00,
                 'paid_at'         => null,
             ],
-            // Order 3 (shipped) — paid by credit card
+            // Order 3 (shipped, March) — paid by credit card
             [
                 'order_id'        => $orders->get(2)->order_id,
                 'payment_status'  => 'paid',
                 'transaction_ref' => 'CC-TXN-001',
                 'amount'          => 2499.00,
-                'paid_at'         => now()->subDays(2),
+                'paid_at'         => now()->setMonth(3)->setDay(15),
             ],
-            // Order 4 (cancelled) — refunded
+            // Order 4 (cancelled, May) — refunded
             [
                 'order_id'        => $orders->get(3)->order_id,
                 'payment_status'  => 'refunded',
                 'transaction_ref' => 'GCASH-TXN-002',
                 'amount'          => 399.00,
-                'paid_at'         => now()->subDays(3),
+                'paid_at'         => now()->setMonth(5)->setDay(20),
             ],
-            // Order 5 (processing) — pending COD
+            // Order 5 (processing, June) — pending COD
             [
                 'order_id'        => $orders->get(4)->order_id,
                 'payment_status'  => 'pending',

@@ -60,7 +60,7 @@
                         <label for="email">Email</label>
                         <input type="text" name="email" id="email" value="{{ old('email') }}" autofocus class="form-control @error('email') is-invalid @enderror">
                         @error('email')
-                            <span class="invalid-feedback" style="display: block;">{{ $message }}</span>
+                            <span class="invalid-feedback text-danger" style="display: block; color: #d32f2f !important;">{{ $message }}</span>
                         @enderror
                     </div>
 

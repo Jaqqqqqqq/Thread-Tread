@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Product extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, Searchable;
     public $timestamps = false;
 
     // ... everything else stays the same
@@ -75,6 +76,23 @@ class Product extends Model
         return $this->hasMany(ProductImage::class, 'product_id', 'product_id');
     }
 
+    // ===== Scout Search Configuration =====
+
+    /**
+     * Get the indexable data array for the model.
+     */
+    public function toSearchableArray()
+    {
+        return [
+            'product_id' => $this->product_id,
+            'product_name' => $this->product_name,
+            'prod_desc' => $this->prod_desc,
+            'category_id' => $this->category_id,
+            'brand_id' => $this->brand_id,
+            'price' => $this->price,
+        ];
+    }
+
     // ===== Scopes (unchanged) =====
 
     public function scopeInCategory($query, int $categoryId)
@@ -92,7 +110,35 @@ class Product extends Model
         return $query->whereNull('brand_id');
     }
 
-    // ===== Helpers (unchanged) =====
+    // ===== SEARCH SCOPES (NEW) =====
+
+    // 8pts: LIKE query search
+    public function scopeSearchLike($query, ?string $search)
+    {
+        if (!$search) {
+            return $query;
+        }
+        
+        return $query->where('product_name', 'LIKE', "%{$search}%")
+                     ->orWhere('prod_desc', 'LIKE', "%{$search}%");
+    }
+
+    // 10pts: Model-based search (scope)
+    public function scopeSearchByName($query, ?string $searchQuery)
+    {
+        if (!$searchQuery) {
+            return $query;
+        }
+
+        return $query->where('product_name', 'LIKE', "%{$searchQuery}%")
+                     ->orWhere('prod_desc', 'LIKE', "%{$searchQuery}%")
+                     ->orderByRaw("
+                         CASE 
+                             WHEN product_name LIKE ? THEN 1
+                             ELSE 2
+                         END
+                     ", ["%{$searchQuery}%"]);
+    }
 
     public function scopeWithStockInfo($query)
     {

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Events\Verified;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
@@ -30,7 +31,25 @@ Route::get('/home', function () {
     if (! Auth::check()) {
         return redirect()->route('login');
     }
-    $products = \App\Models\Product::with('brand', 'category')->take(24)->get();
+    
+    $query = request('q');
+    
+    if ($query) {
+        // Search using Laravel Scout with pagination
+        $products = \App\Models\Product::search($query)
+            ->paginate(15);
+        
+        // Load relationships after pagination
+        $products->load('brand', 'category');
+        
+        // Append search query to pagination links
+        $products->appends(['q' => $query]);
+    } else {
+        // Display all products paginated when no search query
+        $products = \App\Models\Product::with('brand', 'category')
+            ->paginate(15);
+    }
+    
     return view('home', compact('products'));
 })->name('home')->middleware('auth');
 
@@ -38,6 +57,15 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
+
+// Email verification routes
+Route::get('/verify-email/{id}/{hash}', [VerificationController::class, 'verify'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify');
+Route::post('/email/resend', [VerificationController::class, 'resend'])
+    ->middleware('throttle:6,1')
+    ->name('verification.resend');
+
 // Password reset route for forgot password feature
 Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('/logout', function () {
@@ -85,6 +113,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
 });
 
+// Admin routes
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin', function () {
         return redirect()->route('admin.products');
@@ -93,7 +122,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         return redirect()->route('admin.products');
     })->name('admin.dashboard');
     
-        // Products routes
+    // Products routes
     Route::get('/admin/products', [AdminController::class, 'products'])->name('admin.products');
     Route::get('/admin/products/create', [AdminController::class, 'create'])->name('admin.products.create');
     Route::get('/admin/products/trashed', [AdminController::class, 'productsTrashed'])->name('admin.products.trashed');
@@ -135,6 +164,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/orders', [AdminController::class, 'orders'])->name('admin.orders');
     Route::get('/admin/orders/{order_id}', [AdminController::class, 'orderShow'])->name('admin.orders.show');
     Route::put('/admin/orders/{order_id}/status', [AdminController::class, 'orderUpdateStatus'])->name('admin.orders.updateStatus');
+    Route::get('/admin/orders/{order}/edit-status', [OrderController::class, 'editStatus'])->name('orders.edit-status');
+    Route::post('/admin/orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+
+    // Sales Charts (admin)
+    Route::get('/admin/sales/charts', [AdminController::class, 'salesCharts'])->name('admin.sales.charts');
 
     // Reviews (admin)
     Route::get('/admin/reviews', [ReviewController::class, 'adminIndex'])->name('admin.reviews');

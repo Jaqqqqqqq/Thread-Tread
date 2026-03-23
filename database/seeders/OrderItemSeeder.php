@@ -25,7 +25,7 @@ class OrderItemSeeder extends Seeder
             });
         };
 
-        // Order 1 (Juan - completed) — 2 items
+        // Order 1 (Juan - completed, January) — 2 items
         $v1 = $findVariant('Nike Dri-FIT Training Tee', 'M', 'Black');
         $v2 = $findVariant('Adidas Essentials Tee', 'L', 'White');
 
@@ -33,7 +33,8 @@ class OrderItemSeeder extends Seeder
             'order_id'    => $orders->get(0)->order_id,
             'variant_id'  => $v1->variant_id,
             'oi_quantity' => 2,
-            'oi_price'    => 899.00, // Snapshot price at purchase
+            'oi_price'    => 899.00,
+            'created_at'  => now()->setMonth(1)->setDay(10),
         ]);
 
         if ($v2) OrderItem::create([
@@ -41,36 +42,40 @@ class OrderItemSeeder extends Seeder
             'variant_id'  => $v2->variant_id,
             'oi_quantity' => 1,
             'oi_price'    => 799.00,
+            'created_at'  => now()->setMonth(1)->setDay(10),
         ]);
 
-        // Order 2 (Juan - pending) — 1 item
+        // Order 2 (Juan - pending, February) — 1 item
         $v3 = $findVariant('Nike Flex Stride Shorts', 'M', 'Black');
         if ($v3) OrderItem::create([
             'order_id'    => $orders->get(1)->order_id,
             'variant_id'  => $v3->variant_id,
             'oi_quantity' => 1,
             'oi_price'    => 899.00,
+            'created_at'  => now()->setMonth(2)->setDay(14),
         ]);
 
-        // Order 3 (Maria - shipped) — 1 item
+        // Order 3 (Maria - shipped, March) — 1 item
         $v4 = $findVariant('Nike Windrunner Jacket', 'S', 'Black');
         if ($v4) OrderItem::create([
             'order_id'    => $orders->get(2)->order_id,
             'variant_id'  => $v4->variant_id,
             'oi_quantity' => 1,
             'oi_price'    => 2499.00,
+            'created_at'  => now()->setMonth(3)->setDay(15),
         ]);
 
-        // Order 4 (Maria - cancelled) — 1 item
+        // Order 4 (Maria - cancelled, May) — 1 item
         $v5 = $findVariant('Penshoppe Graphic Tee', 'S', 'White');
         if ($v5) OrderItem::create([
             'order_id'    => $orders->get(3)->order_id,
             'variant_id'  => $v5->variant_id,
             'oi_quantity' => 1,
             'oi_price'    => 399.00,
+            'created_at'  => now()->setMonth(5)->setDay(20),
         ]);
 
-        // Order 5 (Jose - processing) — 2 items
+        // Order 5 (Jose - processing, June) — 2 items
         $v6 = $findVariant('Bench Classic Polo', 'L', 'White');
         $v7 = $findVariant('Penshoppe Slim Fit Jeans', 'M', 'Black');
 
@@ -79,6 +84,7 @@ class OrderItemSeeder extends Seeder
             'variant_id'  => $v6->variant_id,
             'oi_quantity' => 1,
             'oi_price'    => 599.00,
+            'created_at'  => now()->setMonth(6)->setDay(5),
         ]);
 
         if ($v7) OrderItem::create([
@@ -86,6 +92,7 @@ class OrderItemSeeder extends Seeder
             'variant_id'  => $v7->variant_id,
             'oi_quantity' => 1,
             'oi_price'    => 999.00,
+            'created_at'  => now()->setMonth(6)->setDay(5),
         ]);
     }
 }

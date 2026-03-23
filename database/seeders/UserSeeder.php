@@ -76,6 +76,15 @@ class UserSeeder extends Seeder
                 'is_active'=> false, // Inactive user for testing admin controls
                 'phone'    => '09221234567',
             ],
+            [
+                'fname'    => 'Shia',
+                'lname'    => 'Hart',
+                'email'    => 'shia@gmail.com',
+                'password' => Hash::make('shia123'),
+                'role'     => 'admin',
+                'is_active'=> true, 
+                'phone'    => '09129761234',
+            ],
         ];
 
         foreach ($customers as $customer) {

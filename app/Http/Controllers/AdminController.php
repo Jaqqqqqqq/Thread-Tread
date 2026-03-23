@@ -8,9 +8,17 @@ use App\Models\ProductImage;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Imports\ProductsImport;
+use App\Charts\YearlySalesChart;
+use App\Charts\SalesRangeChart;
+use App\Charts\ProductPieChart;
+use App\Mail\OrderStatusUpdated;
+use App\Services\ReceiptGenerator;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class AdminController extends Controller
 {
@@ -56,7 +64,11 @@ class AdminController extends Controller
             if ($request->hasFile('prod_image')) {
                 $image = $request->file('prod_image');
                 $imageName = time() . '.' . $image->getClientOriginalExtension();
-                $image->move(public_path('images/products'), $imageName);
+                $directory = public_path('images/products');
+                if (!is_dir($directory)) {
+                    mkdir($directory, 0755, true);
+                }
+                $image->move($directory, $imageName);
                 $validated['prod_image'] = 'images/products/' . $imageName;
             }
 
@@ -67,9 +79,14 @@ class AdminController extends Controller
             // Handle multiple product images
             if ($request->hasFile('product_images')) {
                 $sortOrder = 0;
+                $galleryDir = public_path('images/products/gallery');
+                if (!is_dir($galleryDir)) {
+                    mkdir($galleryDir, 0755, true);
+                }
+                
                 foreach ($request->file('product_images') as $image) {
                     $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                    $image->move(public_path('images/products/gallery'), $imageName);
+                    $image->move($galleryDir, $imageName);
                     
                     ProductImage::create([
                         'product_id' => $product->product_id,
@@ -106,8 +123,12 @@ class AdminController extends Controller
                     // Handle variant color image
                     if ($request->hasFile("variants.$index.color_image")) {
                         $colorImage = $request->file("variants.$index.color_image");
-                        $colorImageName = time() . '_' . $index . '_' . $colorImage->getClientOriginalExtension();
-                        $colorImage->move(public_path('images/products/variants'), $colorImageName);
+                        $colorImageName = time() . '_' . $index . '.' . $colorImage->getClientOriginalExtension();
+                        $variantDir = public_path('images/products/variants');
+                        if (!is_dir($variantDir)) {
+                            mkdir($variantDir, 0755, true);
+                        }
+                        $colorImage->move($variantDir, $colorImageName);
                         $variantData['color_image'] = 'images/products/variants/' . $colorImageName;
                     }
 
@@ -501,7 +522,7 @@ class AdminController extends Controller
 
         public function orderUpdateStatus(Request $request, $order_id)
         {
-            $order = Order::findOrFail($order_id);
+            $order = Order::with(['items.variant.product', 'user', 'paymentMethod'])->findOrFail($order_id);
 
             $request->validate([
                 'order_status' => 'required|in:pending,processing,shipped,completed,cancelled',
@@ -522,7 +543,126 @@ class AdminController extends Controller
 
             $order->update(['order_status' => $newStatus]);
 
-            return redirect()->back()->with('success', 'Order #' . $order->order_id . ' status updated to ' . ucfirst($newStatus) . '.');
+            try {
+                // Generate PDF receipt BEFORE sending email
+                ReceiptGenerator::generateReceipt($order);
+
+                // Refresh order to ensure latest state
+                $order = $order->fresh();
+                $order->load('user', 'items.variant.product', 'paymentMethod');
+
+                // Send email notification to customer with status update and receipt
+                Mail::to($order->user->email)->send(new OrderStatusUpdated($order, $oldStatus, $newStatus));
+
+                return redirect()->back()->with('success', 'Order #' . $order->order_id . ' status updated to ' . ucfirst($newStatus) . ' and email with PDF receipt sent to customer.');
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Error updating order status and sending email', [
+                    'order_id' => $order_id,
+                    'error' => $e->getMessage()
+                ]);
+                
+                return redirect()->back()->with('error', 'Status updated but failed to send email: ' . $e->getMessage());
+            }
+        }
+
+        // ===== Sales Charts (Following ConsoleTVs\Charts Pattern) =====
+
+        public function salesCharts(Request $request)
+        {
+            // Prepare Yearly Sales Chart
+            $yearlySalesData = DB::table('orders')
+                ->whereYear('created_at', date('Y'))
+                ->selectRaw('MONTH(created_at) as month, SUM(total_amount) as total')
+                ->groupBy('month')
+                ->orderBy('month')
+                ->pluck('total', 'month')
+                ->all();
+
+            $yearlySalesChart = new YearlySalesChart();
+            $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            $chartMonths = [];
+            $chartData = [];
+            for ($i = 1; $i <= 12; $i++) {
+                $chartMonths[] = $months[$i - 1];
+                $chartData[] = isset($yearlySalesData[$i]) ? (float)$yearlySalesData[$i] : 0;
+            }
+            $yearlySalesChart->labels($chartMonths);
+            $yearlySalesChart->dataset('Monthly Sales 2026', 'bar', $chartData)
+                ->backgroundColor('rgba(54, 162, 235, 0.5)');
+            $yearlySalesChart->options([
+                'responsive' => true,
+                'legend' => ['display' => true],
+                'tooltips' => ['enabled' => true],
+                'aspectRatio' => 1.5,
+                'scales' => [
+                    'yAxes' => [['display' => true]],
+                    'xAxes' => [['gridLines' => ['display' => false], 'display' => true]],
+                ],
+            ]);
+
+            // Prepare Sales by Date Range Chart (with filter from request)
+            $endDate = $request->input('end_date', date('Y-m-d'));
+            $startDate = $request->input('start_date', date('Y-m-d', strtotime('-30 days')));
+            
+            $rangeData = DB::table('orders')
+                ->whereDate('created_at', '>=', $startDate)
+                ->whereDate('created_at', '<=', $endDate)
+                ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total')
+                ->groupBy('date')
+                ->orderBy('date')
+                ->pluck('total', 'date')
+                ->all();
+
+            $salesRangeChart = new SalesRangeChart();
+            $salesRangeChart->labels(array_keys($rangeData));
+            $salesRangeChart->dataset('Sales by Date Range', 'bar', array_values(array_map('floatval', $rangeData)))
+                ->backgroundColor('rgba(255, 159, 64, 0.5)');
+            $salesRangeChart->options([
+                'responsive' => true,
+                'legend' => ['display' => true],
+                'tooltips' => ['enabled' => true],
+                'aspectRatio' => 1.5,
+                'scales' => [
+                    'yAxes' => [['display' => true]],
+                    'xAxes' => [['gridLines' => ['display' => false], 'display' => true]],
+                ],
+            ]);
+
+            // Prepare Product Sales Pie Chart
+            $productSalesData = DB::table('order_items as oi')
+                ->join('product_variants as pv', 'oi.variant_id', '=', 'pv.variant_id')
+                ->join('products as p', 'pv.product_id', '=', 'p.product_id')
+                ->selectRaw('p.product_name, SUM(oi.oi_quantity * oi.oi_price) as total')
+                ->groupBy('p.product_id', 'p.product_name')
+                ->orderByDesc('total')
+                ->limit(8)
+                ->pluck('total', 'product_name')
+                ->all();
+
+            $productPieChart = new ProductPieChart();
+            $productPieChart->labels(array_keys($productSalesData));
+            $productPieChart->dataset(
+                'Sales by Product',
+                'pie',
+                array_values(array_map('floatval', $productSalesData))
+            )->backgroundColor([
+                'rgba(255, 99, 132, 0.5)',
+                'rgba(54, 162, 235, 0.5)',
+                'rgba(255, 206, 86, 0.5)',
+                'rgba(75, 192, 192, 0.5)',
+                'rgba(153, 102, 255, 0.5)',
+                'rgba(255, 159, 64, 0.5)',
+                'rgba(199, 199, 199, 0.5)',
+                'rgba(83, 102, 255, 0.5)',
+            ]);
+            $productPieChart->options([
+                'responsive' => true,
+                'legend' => ['display' => true],
+                'tooltips' => ['enabled' => true],
+                'aspectRatio' => 1.25,
+            ]);
+
+            return view('admin.sales-charts', compact('yearlySalesChart', 'salesRangeChart', 'productPieChart'));
         }
     }
 

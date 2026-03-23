@@ -24,6 +24,9 @@
                     <a href="{{ route('admin.reviews') }}" style="background: transparent; color: #fff; border: none; padding: 6px 12px; text-decoration: none; font-weight: normal; font-size: 13px; cursor: pointer;">
                         <span style="margin-right: 4px;">⭐</span>REVIEWS
                     </a>
+                    <a href="{{ route('admin.sales.charts') }}" style="background: transparent; color: #fff; border: none; padding: 6px 12px; text-decoration: none; font-weight: normal; font-size: 13px; cursor: pointer;">
+                        <span style="margin-right: 4px;">📊</span>CHARTS
+                    </a>
                 @else
                     <a href="{{ route('home') }}" style="color: #fff; text-decoration: none; font-size: 13px; font-weight: normal; padding: 6px 12px;">
                         <span style="margin-right: 4px;">🏠</span>HOME

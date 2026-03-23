@@ -28,6 +28,26 @@ class LoginController extends Controller
         $remember = $request->boolean('remember');
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
+            
+            \Illuminate\Support\Facades\Log::info('Login attempt', [
+                'user_id' => $user->user_id,
+                'email' => $user->email,
+                'email_verified_at' => $user->email_verified_at,
+                'is_null' => $user->email_verified_at === null
+            ]);
+            
+            // Check if email is verified
+            if ($user->email_verified_at === null) {
+                \Illuminate\Support\Facades\Log::warning('Login denied - email not verified', [
+                    'user_id' => $user->user_id,
+                    'email' => $user->email
+                ]);
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Please verify your email address before logging in. Check your inbox for the verification link.',
+                ])->withInput($request->except('password'));
+            }
+            
             $request->session()->regenerate();
             if ($user->role === 'admin') {
                 return redirect()->route('admin.products');
