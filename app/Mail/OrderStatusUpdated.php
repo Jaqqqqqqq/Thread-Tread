@@ -55,6 +55,10 @@ class OrderStatusUpdated extends Mailable
      */
     public function content(): Content
     {
+        // Determine if PDF will be attached
+        $pdfPath = 'receipts/order_' . $this->order->order_id . '.pdf';
+        $hasPdfAttached = \Illuminate\Support\Facades\Storage::exists($pdfPath);
+        
         return new Content(
             view: 'emails.order-status-updated',
             with: [
@@ -63,6 +67,7 @@ class OrderStatusUpdated extends Mailable
                 'oldStatus' => $this->oldStatus,
                 'newStatus' => $this->newStatus,
                 'statusMessage' => $this->statusMessage,
+                'hasPdfAttached' => $hasPdfAttached,
             ],
         );
     }
@@ -73,31 +78,41 @@ class OrderStatusUpdated extends Mailable
     public function attachments(): array
     {
         $attachments = [];
+        $paymentMethod = $this->order->paymentMethod->method_name ?? null;
+        
+        // Check for the PDF file
+        $pdfPath = 'receipts/order_' . $this->order->order_id . '.pdf';
+        
+        if (!\Illuminate\Support\Facades\Storage::exists($pdfPath)) {
+            \Illuminate\Support\Facades\Log::info('⏭️ PDF file does not exist', [
+                'order_id' => $this->order->order_id,
+                'pdf_path' => $pdfPath
+            ]);
+            return $attachments;
+        }
         
         // Determine if we should attach PDF based on payment method and status
         $shouldAttachPdf = false;
-        $paymentMethod = $this->order->paymentMethod->method_name ?? null;
         
-        if ($paymentMethod === 'Online Payment') {
-            // For online payment, attach PDF when admin confirms the order (status = 'confirmed')
-            $shouldAttachPdf = $this->newStatus === 'confirmed';
-            \Illuminate\Support\Facades\Log::info('💳 Online Payment - Checking confirmation status', [
+        if ($paymentMethod === 'Cash on Delivery') {
+            // For COD, attach PDF when order is delivered
+            $shouldAttachPdf = in_array($this->newStatus, ['delivered', 'completed']);
+            \Illuminate\Support\Facades\Log::info('📦 COD Order - Attaching PDF on delivery', [
                 'order_id' => $this->order->order_id,
                 'new_status' => $this->newStatus,
                 'should_attach_pdf' => $shouldAttachPdf
             ]);
-        } elseif ($paymentMethod === 'COD') {
-            // For COD, attach PDF when admin marks order as completed
-            $shouldAttachPdf = $this->newStatus === 'completed';
-            \Illuminate\Support\Facades\Log::info('📦 COD Order - Checking completion status', [
+        } elseif ($paymentMethod === 'Online Payment') {
+            // For online payment, always attach PDF (it was generated at order placement)
+            $shouldAttachPdf = true;
+            \Illuminate\Support\Facades\Log::info('💳 Online Payment - Attaching PDF on all updates', [
                 'order_id' => $this->order->order_id,
-                'new_status' => $this->newStatus,
-                'should_attach_pdf' => $shouldAttachPdf
+                'new_status' => $this->newStatus
             ]);
         }
         
         if (!$shouldAttachPdf) {
-            \Illuminate\Support\Facades\Log::info('⏭️ PDF attachment skipped - status not matching trigger', [
+            \Illuminate\Support\Facades\Log::info('⏭️ PDF attachment skipped - status not triggering', [
                 'order_id' => $this->order->order_id,
                 'payment_method' => $paymentMethod,
                 'current_status' => $this->newStatus
@@ -105,35 +120,20 @@ class OrderStatusUpdated extends Mailable
             return $attachments;
         }
         
-        // Check for the PDF file
-        $pdfPath = 'receipts/order_' . $this->order->order_id . '.pdf';
-        
-        \Illuminate\Support\Facades\Log::info('🔍 Checking for PDF attachment', [
-            'order_id' => $this->order->order_id,
-            'pdf_path' => $pdfPath
-        ]);
-        
-        // Try to attach if PDF exists
-        if (\Illuminate\Support\Facades\Storage::exists($pdfPath)) {
-            try {
-                $attachments[] = Attachment::fromStorage($pdfPath)
-                    ->as('order_receipt_' . $this->order->order_id . '.pdf')
-                    ->withMime('application/pdf');
-                
-                \Illuminate\Support\Facades\Log::info('✅ PDF attachment added successfully', [
-                    'order_id' => $this->order->order_id,
-                    'payment_method' => $paymentMethod
-                ]);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('❌ Failed to add PDF attachment', [
-                    'order_id' => $this->order->order_id,
-                    'error' => $e->getMessage()
-                ]);
-            }
-        } else {
-            \Illuminate\Support\Facades\Log::warning('⚠️ PDF file not found for attachment', [
+        // Try to attach PDF
+        try {
+            $attachments[] = Attachment::fromStorage($pdfPath)
+                ->as('order_receipt_' . $this->order->order_id . '.pdf')
+                ->withMime('application/pdf');
+            
+            \Illuminate\Support\Facades\Log::info('✅ PDF attachment added successfully', [
                 'order_id' => $this->order->order_id,
-                'expected_path' => $pdfPath
+                'payment_method' => $paymentMethod
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('❌ Failed to add PDF attachment', [
+                'order_id' => $this->order->order_id,
+                'error' => $e->getMessage()
             ]);
         }
         

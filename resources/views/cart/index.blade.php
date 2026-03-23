@@ -24,6 +24,9 @@
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
+                        <th style="padding: 14px 16px; text-align: center; font-weight: 600; color: #333; font-size: 13px; width: 40px;">
+                            <input type="checkbox" id="selectAll" style="cursor: pointer;">
+                        </th>
                         <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #333; font-size: 13px;">Product</th>
                         <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #333; font-size: 13px;">Variant</th>
                         <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #333; font-size: 13px;">Price</th>
@@ -35,6 +38,9 @@
                 <tbody>
                     @foreach($cart->items as $item)
                         <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 14px 16px; text-align: center;">
+                                <input type="checkbox" class="item-checkbox" value="{{ $item->cart_item_id }}" data-price="{{ $item->subtotal() }}" style="cursor: pointer;" checked>
+                            </td>
                             <td style="padding: 14px 16px;">
                                 <div style="display: flex; align-items: center; gap: 12px;">
                                     @if($item->variant && $item->variant->product)
@@ -121,18 +127,19 @@
             </table>
 
             <!-- Cart Total & Checkout -->
-            <div style="padding: 20px 16px; background: #f9f9f9; border-top: 2px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+            <form id="checkoutForm" method="POST" action="{{ route('checkout.view') }}" style="padding: 20px 16px; background: #f9f9f9; border-top: 2px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+                @csrf
                 <div>
-                    <span style="font-size: 14px; color: #666;">{{ $cart->itemCount() }} {{ Str::plural('item', $cart->itemCount()) }} in cart</span>
+                    <span id="selectedCount" style="font-size: 14px; color: #666;">{{ $cart->itemCount() }} {{ Str::plural('item', $cart->itemCount()) }} in cart</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 24px;">
                     <div style="text-align: right;">
-                        <span style="font-size: 13px; color: #666;">Total:</span>
-                        <span style="font-size: 1.4rem; font-weight: 700; color: #2e7d32; margin-left: 8px;">&#8369;{{ number_format($cart->calculateTotal(), 2) }}</span>
+                        <span style="font-size: 13px; color: #666;">Selected Total:</span>
+                        <span id="selectedTotal" style="font-size: 1.4rem; font-weight: 700; color: #2e7d32; margin-left: 8px;">&#8369;{{ number_format($cart->calculateTotal(), 2) }}</span>
                     </div>
-                    <a href="{{ route('checkout.view') }}" style="padding: 12px 32px; background: #2e7d32; color: #fff; border: none; border-radius: 4px; font-size: 15px; cursor: pointer; font-weight: 600; text-decoration: none;">Proceed to Checkout</a>
+                    <button type="submit" id="checkoutBtn" style="padding: 12px 32px; background: #2e7d32; color: #fff; border: none; border-radius: 4px; font-size: 15px; cursor: pointer; font-weight: 600;">Proceed to Checkout</button>
                 </div>
-            </div>
+            </form>
         </div>
     @else
         <div style="background: #fff; border-radius: 8px; padding: 48px 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center;">
@@ -143,4 +150,82 @@
         </div>
     @endif
 </div>
-@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+        const checkoutForm = document.getElementById('checkoutForm');
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        const selectedTotal = document.getElementById('selectedTotal');
+        const selectedCount = document.getElementById('selectedCount');
+        
+        // Function to update total and count
+        function updateTotal() {
+            let total = 0;
+            let count = 0;
+            itemCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    total += parseFloat(checkbox.getAttribute('data-price'));
+                    count += 1;
+                }
+            });
+            selectedTotal.textContent = '₱' + total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            selectedCount.textContent = count + ' ' + (count === 1 ? 'item' : 'items') + ' selected';
+            
+            // Disable checkout button if no items selected
+            checkoutBtn.disabled = count === 0;
+            checkoutBtn.style.opacity = count === 0 ? '0.5' : '1';
+            checkoutBtn.style.cursor = count === 0 ? 'not-allowed' : 'pointer';
+        }
+        
+        // Select All functionality
+        selectAllCheckbox.addEventListener('change', function() {
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateTotal();
+        });
+        
+        // Individual checkbox listeners
+        itemCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                // Update select all checkbox state
+                const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
+                const someChecked = Array.from(itemCheckboxes).some(cb => cb.checked);
+                selectAllCheckbox.checked = allChecked;
+                selectAllCheckbox.indeterminate = someChecked && !allChecked;
+                
+                updateTotal();
+            });
+        });
+        
+        // Form submission - add selected items as hidden inputs
+        checkoutForm.addEventListener('submit', function(e) {
+            const selectedItems = Array.from(itemCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            
+            if (selectedItems.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one item to checkout.');
+                return;
+            }
+            
+            // Add hidden inputs for selected items
+            selectedItems.forEach(itemId => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selected_items[]';
+                input.value = itemId;
+                checkoutForm.appendChild(input);
+            });
+        });
+        
+        // Initialize
+        updateTotal();
+    });
+</script>
+@endpush
+

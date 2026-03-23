@@ -95,7 +95,7 @@ Route::middleware('auth')->group(function () {
 
 // Checkout routes
 Route::middleware('auth')->group(function () {
-    Route::get('/checkout', [CheckoutController::class, 'view'])->name('checkout.view');
+    Route::match(['get', 'post'], '/checkout', [CheckoutController::class, 'view'])->name('checkout.view');
     Route::post('/checkout/place', [CheckoutController::class, 'placeOrder'])->name('checkout.place');
     Route::get('/orders/{order_id}/confirmation', [CheckoutController::class, 'confirmation'])->name('orders.confirmation');
 });

@@ -296,8 +296,14 @@
 
         <!-- Payment Info -->
         <div class="payment-info">
-            <strong>Payment Status:</strong> Pending<br>
-            Thank you for your purchase! Your order will be processed shortly.
+            <strong>Payment Status:</strong> 
+            @if($order->payment && $order->payment->payment_status === 'paid')
+                <span style="color: #2e7d32; font-weight: bold;">PAID ✓</span><br>
+                Thank you! Your payment has been received.
+            @else
+                <span style="color: #e65100; font-weight: bold;">PENDING</span><br>
+                Thank you for your purchase! Your order will be processed shortly.
+            @endif
         </div>
 
         <!-- Notes -->

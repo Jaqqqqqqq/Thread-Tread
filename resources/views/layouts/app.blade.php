@@ -11,6 +11,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            order: -1;
+            flex-shrink: 0;
+        }
+        main {
+            flex: 1;
+        }
+    </style>
 </head>
 <body>
     @auth
@@ -19,6 +34,6 @@
     <main class="py-4">
         @yield('content')
     </main>
-</body>
     @stack('scripts')
+</body>
 </html>

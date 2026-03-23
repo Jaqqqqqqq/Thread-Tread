@@ -235,9 +235,11 @@
                 <a href="{{ url('/orders/' . $order->order_id) }}" class="cta-button">View Order Details</a>
             </div>
 
+            @if($hasPdfAttached)
             <div class="note">
-                <strong>Receipt Attached:</strong> Your order receipt is attached to this email in PDF format for your records.
+                <strong>✓ Receipt Attached:</strong> Your order receipt is attached to this email in PDF format for your records.
             </div>
+            @endif
         </div>
 
         <div class="footer">
