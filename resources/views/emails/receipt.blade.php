@@ -27,7 +27,13 @@
             <div class="panel">
                 <h3>Order #{{ $order->order_id }}</h3>
                 <p><strong>Order Date:</strong> {{ $orderDate }}</p>
-                <p><strong>Payment Status:</strong> <span style="color: #2e7d32; font-weight: bold;">PAID ✓</span></p>
+                <p><strong>Payment Status:</strong> <span style="color: #2e7d32; font-weight: bold;">
+                @if($order->payment && $order->payment->payment_status === 'paid')
+                PAID
+                @else
+                PENDING
+                @endif
+                </span></p>
                 <p><strong>Order Total:</strong> ₱{{ $orderTotal }}</p>
             </div>
             

@@ -67,42 +67,60 @@ class OrderController extends Controller
             // Update order status
             $order->update(['order_status' => $newStatus]);
 
-            // For COD orders: When delivered, mark payment as 'paid'
-            if ($newStatus === 'delivered') {
-                Payment::where('order_id', $order->order_id)->update(['payment_status' => 'paid']);
-                \Illumin
-ate\Support\Facades\Log::info('✅ Payment marked as PAID on delivery', ['order_id' => $order->order_id]);
+            // For COD orders: Only mark payment as 'paid' when order is completed
+            if ($newStatus === 'completed') {
+                $updateCount = Payment::where('order_id', $order->order_id)->update(['payment_status' => 'paid']);
+                \Illuminate\Support\Facades\Log::info('✅ Payment update query executed', [
+                    'order_id' => $order->order_id,
+                    'rows_affected' => $updateCount
+                ]);
+                
+                // Refresh entire order with all relationships to ensure payment status is updated
+                $order = Order::with('items.variant.product', 'user', 'paymentMethod', 'payment')
+                             ->where('order_id', $order->order_id)
+                             ->first();
+                
+                // Verify the payment was actually updated
+                \Illuminate\Support\Facades\Log::info('✅ Order refreshed, payment status is now:', [
+                    'order_id' => $order->order_id,
+                    'payment_status' => $order->payment->payment_status ?? 'NO PAYMENT RECORD'
+                ]);
             }
 
-            // Regenerate PDF receipt for email notification
+            // Generate and send PDF receipt for every status update (for both Online Payment and COD)
             try {
                 ReceiptGenerator::generateReceipt($order);
-                \Illuminate\Support\Facades\Log::info('✅ PDF receipt regenerated for email notification', ['order_id' => $order->order_id]);
+                \Illuminate\Support\Facades\Log::info('✅ PDF receipt generated for status update', [
+                    'order_id' => $order->order_id,
+                    'new_status' => $newStatus
+                ]);
             } catch (\Exception $pdfError) {
-                \Illuminate\Support\Facades\Log::error('❌ Failed to regenerate PDF for email', [
+                \Illuminate\Support\Facades\Log::error('❌ Failed to generate PDF for email', [
                     'order_id' => $order->order_id,
                     'error' => $pdfError->getMessage()
                 ]);
             }
 
-            // Send email to customer with status update and receipt
-            \Illuminate\Support\Facades\Log::info('OrderController: Sending email notification');
-            Mail::to($order->user->email)->send(new OrderStatusUpdated($order, $oldStatus, $newStatus));
-
-            \Illuminate\Support\Facades\Log::info('OrderController: Email sent successfully');
+            // Send email to customer with status update and receipt PDF
+            try {
+                Mail::to($order->user->email)->send(new OrderStatusUpdated($order, $oldStatus, $newStatus));
+                \Illuminate\Support\Facades\Log::info('✅ Status update email with PDF receipt sent', [
+                    'order_id' => $order->order_id,
+                    'new_status' => $newStatus
+                ]);
+            } catch (\Exception $mailError) {
+                \Illuminate\Support\Facades\Log::error('⚠️ Failed to send status update email', [
+                    'order_id' => $order->order_id,
+                    'error' => $mailError->getMessage()
+                ]);
+            }
             
-            // Prepare success message based on whether payment was marked as paid
+            // Prepare success message
             $successMsg = 'Order status updated to ' . ucfirst($newStatus);
             if ($newStatus === 'delivered') {
-                // Refresh to get updated payment status
-                $payment = Payment::where('order_id', $order->order_id)->first();
-                if ($payment && $payment->payment_status === 'paid') {
-                    $successMsg .= ' — Payment marked as PAID and receipt email sent to customer.';
-                } else {
-                    $successMsg .= ' and notification email sent to customer.';
-                }
+                $successMsg .= ' — Payment marked as PAID and receipt email with PDF sent to customer.';
             } else {
-                $successMsg .= ' and notification email sent to customer.';
+                $successMsg .= ' and receipt email with PDF sent to customer.';
             }
             
             return back()->with('success', $successMsg);

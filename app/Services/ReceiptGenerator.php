@@ -15,7 +15,7 @@ class ReceiptGenerator
     {
         \Illuminate\Support\Facades\Log::info('ReceiptGenerator: Starting PDF generation', ['order_id' => $order->order_id]);
         
-        $order->load('items.variant.product', 'user', 'paymentMethod');
+        $order->load('items.variant.product', 'user', 'paymentMethod', 'payment');
 
         // Create the PDF from view
         $pdf = Pdf::loadView('receipts.order-receipt', [

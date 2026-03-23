@@ -298,7 +298,7 @@
         <div class="payment-info">
             <strong>Payment Status:</strong> 
             @if($order->payment && $order->payment->payment_status === 'paid')
-                <span style="color: #2e7d32; font-weight: bold;">PAID ✓</span><br>
+                <span style="color: #2e7d32; font-weight: bold;">PAID</span><br>
                 Thank you! Your payment has been received.
             @else
                 <span style="color: #e65100; font-weight: bold;">PENDING</span><br>
@@ -310,17 +310,17 @@
         <div class="notes">
             <h4>Important Information</h4>
             <p>
-                • Please keep this receipt for your records.<br>
-                • You will receive a shipping notification once your order is dispatched.<br>
-                • For any questions or concerns, please contact our customer support.<br>
-                • Returns and exchanges must be made within 30 days of delivery.
+                &bull; Please keep this receipt for your records.<br>
+                &bull; You will receive a shipping notification once your order is dispatched.<br>
+                &bull; For any questions or concerns, please contact our customer support.<br>
+                &bull; Returns and exchanges must be made within 30 days of delivery.
             </p>
         </div>
 
         <!-- Footer -->
         <div class="footer">
             <p>Thank you for your business!</p>
-            <p>© {{ date('Y') }} Thread & Trend. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} Thread & Trend. All rights reserved.</p>
             <p style="margin-top: 20px; color: #bbb; font-size: 11px;">This is an automated receipt. No signature is required.</p>
         </div>
     </div>

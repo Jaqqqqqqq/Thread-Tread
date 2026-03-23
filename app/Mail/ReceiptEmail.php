@@ -25,7 +25,7 @@ class ReceiptEmail extends Mailable
      */
     public function __construct(Order $order, ?string $pdfPath = null)
     {
-        $this->order = $order->load('items.variant.product', 'paymentMethod', 'user');
+        $this->order = $order->load('items.variant.product', 'paymentMethod', 'user', 'payment');
         $this->pdfPath = $pdfPath ?? 'receipts/order_' . $order->order_id . '.pdf';
     }
 
