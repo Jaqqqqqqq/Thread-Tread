@@ -50,14 +50,14 @@ class AdminController extends Controller
                 'price' => 'required|numeric|min:0',
                 'brand_id' => 'required|integer|exists:brands,brand_id',
                 'category_id' => 'required|integer|exists:categories,category_id',
-                'prod_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                'prod_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,avif|max:2048',
                 'product_images' => 'nullable|array',
-                'product_images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                'product_images.*' => 'image|mimes:jpeg,png,jpg,gif,webp,avif|max:2048',
                 'variants' => 'nullable|array',
                 'variants.*.color' => 'nullable|string|max:255',
                 'variants.*.size' => 'nullable|string|max:255',
                 'variants.*.stock' => 'nullable|integer|min:0',
-                'variants.*.color_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                'variants.*.color_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,avif|max:2048',
             ]);
 
             // Handle main product image upload
