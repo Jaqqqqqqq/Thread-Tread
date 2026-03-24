@@ -40,13 +40,11 @@ class Brand extends Model
         'is_active' => 'boolean',
     ];
 
-    // Accessor to get 'name' from 'brand_name'
     public function getNameAttribute()
     {
         return $this->brand_name ?? $this->attributes['name'] ?? null;
     }
 
-    // Mutator to set 'brand_name' from 'name'
     public function setNameAttribute($value)
     {
         $this->attributes['brand_name'] = $value;

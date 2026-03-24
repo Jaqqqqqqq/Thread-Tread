@@ -29,14 +29,11 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
-        // Get selected items from cart, or use all if not specified
         $selectedItems = $request->input('selected_items', []);
         
-        // Store selected items in session for use in placeOrder
         if (!empty($selectedItems)) {
             session(['selected_items' => $selectedItems]);
         } else {
-            // If no selected items specified, use all items
             $selectedItems = $cart->items->pluck('cart_item_id')->toArray();
             session(['selected_items' => $selectedItems]);
         }
@@ -51,34 +48,28 @@ class CheckoutController extends Controller
         $user = Auth::user();
         $cart = Cart::where('user_id', $user->user_id)->with('items.variant.product')->first();
 
-        // Get the payment method to check if it's online payment
         $paymentMethod = PaymentMethod::find($request->method_id);
         
-        // Get selected items - first from session, then from request
         $selectedItems = session('selected_items', $request->input('selected_items', []));
         
         if (empty($selectedItems)) {
             return back()->with('error', 'Please select at least one product to checkout.');
         }
         
-        // Calculate total only for selected items
         $selectedCartItems = $cart->items()->whereIn('cart_item_id', $selectedItems)->get();
         $totalAmount = $selectedCartItems->sum(function($item) {
             return $item->subtotal();
         });
         
-        // Validation rules
         $rules = [
             'shipping_address' => 'required|string|max:255',
             'method_id' => 'required|exists:payment_methods,method_id',
             'selected_items' => 'required|array|min:1',
         ];
         
-        // Add validation based on payment method
         if ($paymentMethod && $paymentMethod->method_name === 'Online Payment') {
             $rules['payment_amount'] = 'required|numeric|min:' . $totalAmount . '|max:999999.99';
         } else {
-            // COD doesn't need payment amount validation
             $rules['payment_amount'] = 'nullable|numeric';
         }
         

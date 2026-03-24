@@ -27,11 +27,9 @@ class RegisterController extends Controller
             'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        // Make the first user an admin
         $userCount = User::count();
         $role = $userCount === 0 ? 'admin' : 'customer';
 
-        // Prepare user data
         $userData = [
             'fname' => $request->fname,
             'lname' => $request->lname,
@@ -41,7 +39,6 @@ class RegisterController extends Controller
             'role' => $role,
         ];
 
-        // Handle profile photo upload
         if ($request->hasFile('profile_photo')) {
             $photo = $request->file('profile_photo');
             $photoName = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
@@ -51,10 +48,8 @@ class RegisterController extends Controller
 
         $user = User::create($userData);
 
-        // Send verification email
         Mail::to($user->email)->send(new EmailVerification($user));
 
-        // Don't auto-login - user must verify email first
         return redirect()->route('login')->with('success', 'Registration successful! Please check your email to verify your account before logging in.');
     }
 }

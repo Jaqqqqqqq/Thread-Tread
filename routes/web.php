@@ -35,17 +35,13 @@ Route::get('/home', function () {
     $query = request('q');
     
     if ($query) {
-        // Search using Laravel Scout with pagination
         $products = \App\Models\Product::search($query)
             ->paginate(15);
         
-        // Load relationships after pagination
         $products->load('brand', 'category');
         
-        // Append search query to pagination links
         $products->appends(['q' => $query]);
     } else {
-        // Display all products paginated when no search query
         $products = \App\Models\Product::with('brand', 'category')
             ->paginate(15);
     }
@@ -58,7 +54,6 @@ Route::post('/login', [LoginController::class, 'login']);
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
 
-// Email verification routes
 Route::get('/verify-email/{id}/{hash}', [VerificationController::class, 'verify'])
     ->middleware(['signed', 'throttle:6,1'])
     ->name('verification.verify');
@@ -66,26 +61,22 @@ Route::post('/email/resend', [VerificationController::class, 'resend'])
     ->middleware('throttle:6,1')
     ->name('verification.resend');
 
-// Password reset route for forgot password feature
 Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('/logout', function () {
     Auth::logout();
     return redirect()->route('login');
 })->name('logout');
 
-// Product routes (customer)
 Route::middleware('auth')->group(function () {
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/{product_id}', [ProductController::class, 'show'])->name('products.show');
 });
 
-// Review routes (customer)
 Route::middleware('auth')->group(function () {
     Route::post('/products/{product_id}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::put('/reviews/{review_id}', [ReviewController::class, 'update'])->name('reviews.update');
 });
 
-// Cart routes
 Route::middleware('auth')->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
@@ -93,19 +84,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cart/{cart_item_id}', [CartController::class, 'remove'])->name('cart.remove');
 });
 
-// Checkout routes
 Route::middleware('auth')->group(function () {
     Route::match(['get', 'post'], '/checkout', [CheckoutController::class, 'view'])->name('checkout.view');
     Route::post('/checkout/place', [CheckoutController::class, 'placeOrder'])->name('checkout.place');
     Route::get('/orders/{order_id}/confirmation', [CheckoutController::class, 'confirmation'])->name('orders.confirmation');
 });
 
-// Orders routes (customer)
 Route::middleware('auth')->group(function () {
     Route::get('/orders', [OrderController::class, 'myOrders'])->name('orders.mine');
 });
 
-// User profile routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -113,7 +101,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
 });
 
-// Admin routes
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin', function () {
         return redirect()->route('admin.products');
@@ -122,7 +109,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
         return redirect()->route('admin.products');
     })->name('admin.dashboard');
     
-    // Products routes
     Route::get('/admin/products', [AdminController::class, 'products'])->name('admin.products');
     Route::get('/admin/products/create', [AdminController::class, 'create'])->name('admin.products.create');
     Route::get('/admin/products/trashed', [AdminController::class, 'productsTrashed'])->name('admin.products.trashed');
@@ -135,12 +121,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/admin/products/{product_id}', [AdminController::class, 'productDestroy'])->name('admin.products.destroy');
     Route::put('/admin/products/{product_id}/restore', [AdminController::class, 'productRestore'])->name('admin.products.restore');
 
-    // Variants routes
     Route::get('/admin/variants/{variant_id}/edit', [AdminController::class, 'variantEdit'])->name('admin.variants.edit');
     Route::put('/admin/variants/{variant_id}/update', [AdminController::class, 'variantUpdate'])->name('admin.variants.update');
     Route::delete('/admin/variants/{variant_id}', [AdminController::class, 'variantDestroy'])->name('admin.variants.destroy');
 
-    // Brands routes
     Route::get('/admin/brands', [AdminController::class, 'brands'])->name('admin.brands');
     Route::get('/admin/brands/create', [AdminController::class, 'brandCreate'])->name('admin.brands.create');
     Route::post('/admin/brands/store', [AdminController::class, 'brandStore'])->name('admin.brands.store');
@@ -148,7 +132,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/brands/{brand_id}/update', [AdminController::class, 'brandUpdate'])->name('admin.brands.update');
     Route::delete('/admin/brands/{brand_id}', [AdminController::class, 'brandDestroy'])->name('admin.brands.destroy');
     
-    // Categories routes
     Route::get('/admin/categories', [AdminController::class, 'categories'])->name('admin.categories');
     Route::get('/admin/categories/create', [AdminController::class, 'categoryCreate'])->name('admin.categories.create');
     Route::post('/admin/categories/store', [AdminController::class, 'categoryStore'])->name('admin.categories.store');
@@ -156,31 +139,25 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/categories/{category_id}/update', [AdminController::class, 'categoryUpdate'])->name('admin.categories.update');
     Route::delete('/admin/categories/{category_id}', [AdminController::class, 'categoryDestroy'])->name('admin.categories.destroy');
     
-    // Users (list, update role, update status)
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::put('/admin/users/{user_id}', [AdminController::class, 'userUpdate'])->name('admin.users.update');
 
-    // Orders (admin)
     Route::get('/admin/orders', [AdminController::class, 'orders'])->name('admin.orders');
     Route::get('/admin/orders/{order_id}', [AdminController::class, 'orderShow'])->name('admin.orders.show');
     Route::put('/admin/orders/{order_id}/status', [AdminController::class, 'orderUpdateStatus'])->name('admin.orders.updateStatus');
     Route::get('/admin/orders/{order}/edit-status', [OrderController::class, 'editStatus'])->name('orders.edit-status');
     Route::post('/admin/orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
 
-    // Sales Charts (admin)
     Route::get('/admin/sales/charts', [AdminController::class, 'salesCharts'])->name('admin.sales.charts');
 
-    // Reviews (admin)
     Route::get('/admin/reviews', [ReviewController::class, 'adminIndex'])->name('admin.reviews');
     Route::delete('/admin/reviews/{review_id}', [ReviewController::class, 'destroy'])->name('admin.reviews.destroy');
 });
 
-// Email verification routes
 Route::get('/email/verify', function () {
     return view('auth.verify');
 })->middleware('auth')->name('verification.notice');
 
-// Verification link works without login: user clicks link in Mailtrap, we verify and redirect to login
 Route::get('/email/verify/{id}/{hash}', function (Request $request) {
     $user = User::find($request->route('id'));
     if (! $user) {

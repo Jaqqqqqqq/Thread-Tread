@@ -10,17 +10,11 @@ use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
-    /**
-     * Get or create cart for the authenticated user.
-     */
     private function getCart()
     {
         return Cart::firstOrCreate(['user_id' => Auth::user()->user_id]);
     }
 
-    /**
-     * Show the cart page.
-     */
     public function index()
     {
         $cart = $this->getCart();
@@ -28,9 +22,6 @@ class CartController extends Controller
         return view('cart.index', compact('cart'));
     }
 
-    /**
-     * Add item to cart.
-     */
     public function add(Request $request)
     {
         $request->validate([
@@ -46,7 +37,6 @@ class CartController extends Controller
 
         $cart = $this->getCart();
 
-        // Check if this variant is already in the cart
         $existingItem = CartItem::where('cart_id', $cart->cart_id)
             ->where('variant_id', $request->variant_id)
             ->first();
@@ -71,9 +61,6 @@ class CartController extends Controller
         return redirect()->route('cart.index')->with('success', 'Item added to cart!');
     }
 
-    /**
-     * Update cart item quantity.
-     */
     public function update(Request $request, $cart_item_id)
     {
         $request->validate([
@@ -83,12 +70,10 @@ class CartController extends Controller
         $item = CartItem::findOrFail($cart_item_id);
         $cart = $this->getCart();
 
-        // Verify the item belongs to user's cart
         if ($item->cart_id !== $cart->cart_id) {
             return redirect()->route('cart.index')->with('error', 'Unauthorized action.');
         }
 
-        // Check stock
         if ($request->quantity > $item->variant->stock) {
             return redirect()->route('cart.index')->with('error', 'Only ' . $item->variant->stock . ' available for this variant.');
         }

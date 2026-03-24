@@ -14,7 +14,6 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        // Validate required fields first
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -36,7 +35,6 @@ class LoginController extends Controller
                 'is_null' => $user->email_verified_at === null
             ]);
             
-            // Check if email is verified
             if ($user->email_verified_at === null) {
                 \Illuminate\Support\Facades\Log::warning('Login denied - email not verified', [
                     'user_id' => $user->user_id,

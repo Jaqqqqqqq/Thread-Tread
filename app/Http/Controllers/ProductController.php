@@ -9,14 +9,12 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    // Show all products with filters/search/sort
     public function index(Request $request)
     {
         $products = Product::with(['category', 'brand', 'variants'])
             ->withStockInfo()
             ->withRatingInfo();
 
-        // Filtering
         if ($request->filled('category')) {
             $products->inCategory($request->category);
         }
@@ -25,7 +23,6 @@ class ProductController extends Controller
             $products->byBrand($request->brand);
         }
 
-        // Price range filter
         if ($request->filled('min_price')) {
             $products->where('price', '>=', (float)$request->min_price);
         }
@@ -33,13 +30,11 @@ class ProductController extends Controller
             $products->where('price', '<=', (float)$request->max_price);
         }
 
-        // Search (name)
         if ($request->filled('search')) {
             $search = $request->search;
             $products->where('product_name', 'like', "%$search%");
         }
 
-        // Sorting
         if ($request->sort == 'price_asc') {
             $products->orderBy('price', 'asc');
         } elseif ($request->sort == 'price_desc') {
@@ -55,7 +50,6 @@ class ProductController extends Controller
         return view('products.index', compact('results', 'categories', 'brands'));
     }
 
-    // Product details
     public function show($id)
     {
         $product = Product::with(['category', 'brand', 'variants', 'reviews.user', 'images'])

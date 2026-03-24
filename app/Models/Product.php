@@ -11,7 +11,6 @@ class Product extends Model
     use SoftDeletes, Searchable;
     public $timestamps = false;
 
-    // ... everything else stays the same
     protected $table = 'products';
     protected $primaryKey = 'product_id';
     public $incrementing = true;
@@ -30,8 +29,6 @@ class Product extends Model
         'price' => 'decimal:2',
         'deleted_at' => 'datetime',
     ];
-
-    // ===== Relationships (unchanged) =====
 
     public function category()
     {
@@ -70,17 +67,11 @@ class Product extends Model
         return $this->hasMany(WishlistItem::class, 'product_id', 'product_id');
     }
 
-    // NEW: relationship for multiple product images
     public function images()
     {
         return $this->hasMany(ProductImage::class, 'product_id', 'product_id');
     }
 
-    // ===== Scout Search Configuration =====
-
-    /**
-     * Get the indexable data array for the model.
-     */
     public function toSearchableArray()
     {
         return [
@@ -92,8 +83,6 @@ class Product extends Model
             'price' => $this->price,
         ];
     }
-
-    // ===== Scopes (unchanged) =====
 
     public function scopeInCategory($query, int $categoryId)
     {
@@ -110,9 +99,6 @@ class Product extends Model
         return $query->whereNull('brand_id');
     }
 
-    // ===== SEARCH SCOPES (NEW) =====
-
-    // 8pts: LIKE query search
     public function scopeSearchLike($query, ?string $search)
     {
         if (!$search) {
@@ -123,7 +109,7 @@ class Product extends Model
                      ->orWhere('prod_desc', 'LIKE', "%{$search}%");
     }
 
-    // 10pts: Model-based search (scope)
+
     public function scopeSearchByName($query, ?string $searchQuery)
     {
         if (!$searchQuery) {

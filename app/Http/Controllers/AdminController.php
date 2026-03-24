@@ -60,7 +60,6 @@ class AdminController extends Controller
                 'variants.*.color_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,avif|max:2048',
             ]);
 
-            // Handle main product image upload
             if ($request->hasFile('prod_image')) {
                 $image = $request->file('prod_image');
                 $imageName = time() . '.' . $image->getClientOriginalExtension();
@@ -72,11 +71,9 @@ class AdminController extends Controller
                 $validated['prod_image'] = 'images/products/' . $imageName;
             }
 
-            // Create the product (exclude variants and product_images from mass assign)
             $productData = collect($validated)->except(['variants', 'product_images'])->filter()->all();
             $product = Product::create($productData);
 
-            // Handle multiple product images
             if ($request->hasFile('product_images')) {
                 $sortOrder = 0;
                 $galleryDir = public_path('images/products/gallery');
@@ -96,7 +93,6 @@ class AdminController extends Controller
                     
                     $sortOrder++;
                     
-                    // If no main image was provided, use the first gallery image
                     if (!$request->hasFile('prod_image') && $sortOrder === 1) {
                         $product->update([
                             'prod_image' => 'images/products/gallery/' . $imageName
@@ -105,10 +101,8 @@ class AdminController extends Controller
                 }
             }
 
-            // Handle product variants
             if ($request->has('variants') && is_array($request->variants)) {
                 foreach ($request->variants as $index => $variant) {
-                    // Skip if no color or size provided
                     if (empty($variant['color']) && empty($variant['size'])) {
                         continue;
                     }
@@ -120,7 +114,6 @@ class AdminController extends Controller
                         'stock' => $variant['stock'] ?? 0,
                     ];
 
-                    // Handle variant color image
                     if ($request->hasFile("variants.$index.color_image")) {
                         $colorImage = $request->file("variants.$index.color_image");
                         $colorImageName = time() . '_' . $index . '.' . $colorImage->getClientOriginalExtension();
@@ -158,21 +151,15 @@ class AdminController extends Controller
             return redirect()->route('admin.products.edit', $request->product_id)->with('success', 'Variant added successfully!');
         }
 
-                // ===== Product Edit & Update =====
-
         public function productEdit($product_id)
         {
-            // Find the product or show 404 if not found
             $product = Product::findOrFail($product_id);
 
-            // Get all brands and categories for the dropdown selects
             $brands = Brand::all();
             $categories = Category::all();
 
-            // Load the product's existing variants so we can display them
             $variants = $product->variants;
             
-            // Load the product's existing images
             $images = $product->images;
 
             return view('admin.edit-product', compact('product', 'brands', 'categories', 'variants', 'images'));
@@ -180,10 +167,8 @@ class AdminController extends Controller
 
         public function productUpdate(Request $request, $product_id)
         {
-            // Find the product or show 404 if not found
             $product = Product::findOrFail($product_id);
 
-            // Validate the incoming data
             $validated = $request->validate([
                 'product_name' => 'required|string|max:255',
                 'prod_desc'    => 'nullable|string',
@@ -197,9 +182,7 @@ class AdminController extends Controller
                 'delete_images.*' => 'integer',
             ]);
 
-            // Handle main image upload (only if a new image was selected)
             if ($request->hasFile('prod_image')) {
-                // Delete the old image file if it exists
                 if ($product->prod_image && file_exists(public_path($product->prod_image))) {
                     unlink(public_path($product->prod_image));
                 }
@@ -210,12 +193,10 @@ class AdminController extends Controller
                 $validated['prod_image'] = 'images/products/' . $imageName;
             }
 
-            // Handle deleting existing product images
             if ($request->has('delete_images') && is_array($request->delete_images)) {
                 foreach ($request->delete_images as $imageId) {
                     $productImage = ProductImage::find($imageId);
                     if ($productImage && $productImage->product_id == $product_id) {
-                        // Delete the file if it exists
                         if (file_exists(public_path($productImage->image_path))) {
                             unlink(public_path($productImage->image_path));
                         }
@@ -224,7 +205,6 @@ class AdminController extends Controller
                 }
             }
 
-            // Handle adding new product images
             if ($request->hasFile('product_images')) {
                 $maxSortOrder = $product->images->max('sort_order') ?? -1;
                 $sortOrder = $maxSortOrder + 1;
@@ -243,21 +223,15 @@ class AdminController extends Controller
                 }
             }
 
-            // Update the product with validated data
             $product->update($validated);
 
             return redirect()->route('admin.products')->with('success', 'Product updated successfully!');
         }
 
-        // ===== Product Delete, Trash & Restore =====
-
         public function productDestroy($product_id)
         {
-            // findOrFail only searches non-trashed products by default
             $product = Product::findOrFail($product_id);
 
-            // This does a SOFT delete — sets 'deleted_at' timestamp
-            // The product is NOT removed from the database
             $product->delete();
 
             return redirect()->route('admin.products')->with('success', 'Product moved to trash.');
@@ -265,8 +239,6 @@ class AdminController extends Controller
 
         public function productsTrashed()
         {
-            // onlyTrashed() returns ONLY soft-deleted products
-            // (products where deleted_at IS NOT NULL)
             $products = Product::onlyTrashed()->with('brand', 'category')->get();
 
             return view('admin.products-trashed', compact('products'));
@@ -274,18 +246,13 @@ class AdminController extends Controller
 
         public function productRestore($product_id)
         {
-            // withTrashed() searches ALL products including soft-deleted ones
-            // Without it, findOrFail would skip trashed products and return 404
             $product = Product::withTrashed()->findOrFail($product_id);
 
-            // restore() sets 'deleted_at' back to NULL
-            // The product becomes visible again in normal queries
             $product->restore();
 
             return redirect()->route('admin.products.trashed')->with('success', 'Product restored successfully!');
         }
 
-        // Brands CRUD
         public function brands()
         {
             $brands = Brand::all();
@@ -306,7 +273,6 @@ class AdminController extends Controller
                 'is_active' => 'nullable|boolean',
             ]);
 
-            // Handle logo upload
             if ($request->hasFile('brand_logo')) {
                 $logo = $request->file('brand_logo');
                 $logoName = time() . '.' . $logo->getClientOriginalExtension();
@@ -336,9 +302,7 @@ class AdminController extends Controller
                 'is_active' => 'nullable|boolean',
             ]);
 
-            // Handle logo upload
             if ($request->hasFile('brand_logo')) {
-                // Delete old logo if exists
                 if ($brand->brand_logo && file_exists(public_path($brand->brand_logo))) {
                     unlink(public_path($brand->brand_logo));
                 }
@@ -361,7 +325,6 @@ class AdminController extends Controller
             return redirect()->route('admin.brands')->with('success', 'Brand deleted successfully!');
         }
 
-        // Categories CRUD
         public function categories()
         {
             $categories = Category::all();
@@ -408,7 +371,6 @@ class AdminController extends Controller
             return redirect()->route('admin.categories')->with('success', 'Category deleted successfully!');
         }
 
-        // Users: list, update role, update status
         public function users()
         {
             $users = \App\Models\User::orderBy('created_at', 'desc')->get();
@@ -427,8 +389,6 @@ class AdminController extends Controller
             $user->save();
             return redirect()->route('admin.users')->with('success', 'User updated successfully.');
         }
-
-        // ===== Product Import =====
 
         public function productsImportForm()
         {
@@ -449,8 +409,6 @@ class AdminController extends Controller
             }
         }
 
-        // ===== Product Variant Edit, Update, Delete =====
-
         public function variantEdit($variant_id)
         {
             $variant = ProductVariant::findOrFail($variant_id);
@@ -470,9 +428,7 @@ class AdminController extends Controller
                 'color_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             ]);
 
-            // Handle color image upload
             if ($request->hasFile('color_image')) {
-                // Delete old color image if it exists
                 if ($variant->color_image && file_exists(public_path($variant->color_image))) {
                     unlink(public_path($variant->color_image));
                 }
@@ -493,7 +449,6 @@ class AdminController extends Controller
             $variant = ProductVariant::findOrFail($variant_id);
             $product_id = $variant->product_id;
 
-            // Delete color image if it exists
             if ($variant->color_image && file_exists(public_path($variant->color_image))) {
                 unlink(public_path($variant->color_image));
             }
@@ -502,8 +457,6 @@ class AdminController extends Controller
 
             return redirect()->route('admin.products.edit', $product_id)->with('success', 'Variant deleted successfully!');
         }
-
-        // ===== Admin Order Management =====
 
         public function orders()
         {
@@ -531,7 +484,6 @@ class AdminController extends Controller
             $oldStatus = $order->order_status;
             $newStatus = $request->order_status;
 
-            // If cancelling, restore stock
             if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
                 $order->load('items.variant');
                 foreach ($order->items as $item) {
@@ -544,14 +496,11 @@ class AdminController extends Controller
             $order->update(['order_status' => $newStatus]);
 
             try {
-                // Generate PDF receipt BEFORE sending email
                 ReceiptGenerator::generateReceipt($order);
 
-                // Refresh order to ensure latest state
                 $order = $order->fresh();
                 $order->load('user', 'items.variant.product', 'paymentMethod');
 
-                // Send email notification to customer with status update and receipt
                 Mail::to($order->user->email)->send(new OrderStatusUpdated($order, $oldStatus, $newStatus));
 
                 return redirect()->back()->with('success', 'Order #' . $order->order_id . ' status updated to ' . ucfirst($newStatus) . ' and email with PDF receipt sent to customer.');
@@ -565,11 +514,8 @@ class AdminController extends Controller
             }
         }
 
-        // ===== Sales Charts (Following ConsoleTVs\Charts Pattern) =====
-
         public function salesCharts(Request $request)
         {
-            // Prepare Yearly Sales Chart
             $yearlySalesData = DB::table('orders')
                 ->whereYear('created_at', date('Y'))
                 ->selectRaw('MONTH(created_at) as month, SUM(total_amount) as total')
@@ -600,7 +546,6 @@ class AdminController extends Controller
                 ],
             ]);
 
-            // Prepare Sales by Date Range Chart (with filter from request)
             $endDate = $request->input('end_date', date('Y-m-d'));
             $startDate = $request->input('start_date', date('Y-m-d', strtotime('-30 days')));
             
@@ -628,7 +573,6 @@ class AdminController extends Controller
                 ],
             ]);
 
-            // Prepare Product Sales Pie Chart
             $productSalesData = DB::table('order_items as oi')
                 ->join('product_variants as pv', 'oi.variant_id', '=', 'pv.variant_id')
                 ->join('products as p', 'pv.product_id', '=', 'p.product_id')

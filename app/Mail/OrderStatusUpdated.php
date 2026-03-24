@@ -17,16 +17,12 @@ class OrderStatusUpdated extends Mailable
     public string $newStatus;
     public string $statusMessage;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(Order $order, string $oldStatus, string $newStatus)
     {
         $this->order = $order->load('items.variant.product', 'user', 'paymentMethod', 'payment');
         $this->oldStatus = $oldStatus;
         $this->newStatus = $newStatus;
         
-        // Set status message based on new status
         $this->statusMessage = match($newStatus) {
             'pending' => 'Your order is pending confirmation',
             'confirmed' => 'Your order has been confirmed!',
@@ -38,9 +34,7 @@ class OrderStatusUpdated extends Mailable
         };
     }
 
-    /**
-     * Get the message envelope.
-     */
+
     public function envelope(): Envelope
     {
         return new Envelope(
@@ -49,12 +43,8 @@ class OrderStatusUpdated extends Mailable
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
-        // Determine if PDF will be attached
         $pdfPath = 'receipts/order_' . $this->order->order_id . '.pdf';
         $hasPdfAttached = \Illuminate\Support\Facades\Storage::exists($pdfPath);
         
@@ -71,15 +61,11 @@ class OrderStatusUpdated extends Mailable
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     */
     public function attachments(): array
     {
         $attachments = [];
         $paymentMethod = $this->order->paymentMethod->method_name ?? null;
         
-        // Check for the PDF file
         $pdfPath = 'receipts/order_' . $this->order->order_id . '.pdf';
         
         if (!\Illuminate\Support\Facades\Storage::exists($pdfPath)) {
@@ -90,7 +76,6 @@ class OrderStatusUpdated extends Mailable
             return $attachments;
         }
         
-        // Attach PDF receipt for EVERY status update (for both Cash on Delivery and Online Payment)
         try {
             $attachments[] = Attachment::fromStorage($pdfPath)
                 ->as('order_receipt_' . $this->order->order_id . '.pdf')

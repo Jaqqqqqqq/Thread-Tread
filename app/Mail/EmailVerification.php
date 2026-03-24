@@ -18,9 +18,6 @@ class EmailVerification extends Mailable
     public User $user;
     public string $verificationUrl;
 
-    /**
-     * Create a new message instance.
-     */
     public function __construct(User $user)
     {
         $this->user = $user;
@@ -31,9 +28,6 @@ class EmailVerification extends Mailable
         );
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
         return new Envelope(
@@ -42,9 +36,6 @@ class EmailVerification extends Mailable
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
@@ -56,9 +47,6 @@ class EmailVerification extends Mailable
         );
     }
 
-    /**
-     * Get the attachments for the message.
-     */
     public function attachments(): array
     {
         return [];
